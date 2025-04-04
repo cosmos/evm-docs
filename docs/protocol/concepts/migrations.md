@@ -13,21 +13,21 @@ can be useful for manual analysis of the state at a given height.
 Export state with:
 
 ```bash
-simd export > new_genesis.json
+evmd export > new_genesis.json
 ```
 
 You can also export state from a particular height
 (at the end of processing the block of that height):
 
 ```bash
-simd export --height [height] > new_genesis.json
+evmd export --height [height] > new_genesis.json
 ```
 
 If you plan to start a new network for 0 height (i.e genesis) from the exported state,
 export with the `--for-zero-height` flag:
 
 ```bash
-simd export --height [height] --for-zero-height > new_genesis.json
+evmd export --height [height] --for-zero-height > new_genesis.json
 ```
 
 ## Manually Migrate State
@@ -51,5 +51,5 @@ You can use the `migrate` command to
 migrate from a given version to the next one (eg: `v0.X.X` to `v1.X.X`):
 
 ```bash
-simd migrate TARGET_VERSION GENESIS_FILE --chain-id=<new_chain_id> --genesis-time=<yyyy-mm-ddThh:mm:ssZ>
+evmd migrate TARGET_VERSION GENESIS_FILE --chain-id=<new_chain_id> --genesis-time=<yyyy-mm-ddThh:mm:ssZ>
 ```

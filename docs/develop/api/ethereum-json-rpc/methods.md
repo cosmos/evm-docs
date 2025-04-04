@@ -1200,7 +1200,7 @@ Any transaction below this limit is excluded from the validator block proposal p
 
 This method requires a `node` restart after being called because it changes the configuration file.
 
-Make sure your `simd start` call is not using the flag `minimum-gas-prices`,
+Make sure your `evmd start` call is not using the flag `minimum-gas-prices`,
 because this value will be used instead of the one set on the configuration file.
 
 #### Parameters

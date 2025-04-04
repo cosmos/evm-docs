@@ -682,7 +682,7 @@ func (app *ChainApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 
 Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all relevant files.
 
-**`NewChainApp` Callsites:** Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/simd/commands.go`, `cmd/simd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
+**`NewChainApp` Callsites:** Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/evmd/commands.go`, `cmd/evmd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
 
 *   **Example (`app/test_helpers.go`):**
     ```go
@@ -697,7 +697,7 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
         )
     }
     ```
-*   **Example (`cmd/simd/commands.go`):**
+*   **Example (`cmd/evmd/commands.go`):**
     ```go
     func newApp( /* ... */ ) servertypes.Application {
         // ...
@@ -957,7 +957,7 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 
 ## Step 9: Update Command Files
 
-Apply these changes to your chain's command files `cmd/simd/commands.go`:
+Apply these changes to your chain's command files `cmd/evmd/commands.go`:
 ```go
 // Add imports
 evmserverconfig "github.com/cosmos/evm/server/config"
@@ -1021,7 +1021,7 @@ func initRootCmd(
 
 ## Step 10: Update root.go to Use EVM-Compatible Keyring
 
-Update `cmd/simd/root.go`:
+Update `cmd/evmd/root.go`:
 ```go
 import (
     // Add import

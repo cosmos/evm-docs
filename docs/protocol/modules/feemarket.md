@@ -272,7 +272,7 @@ A user can query and interact with the `feemarket` module using the CLI.
 The `query` commands allow users to query `feemarket` state.
 
 ```bash
-simd query feemarket --help
+evmd query feemarket --help
 ```
 
 ##### Base Fee
@@ -280,13 +280,13 @@ simd query feemarket --help
 The `base-fee` command allows users to query the block base fee by height.
 
 ```bash
-simd query feemarket base-fee [flags]
+evmd query feemarket base-fee [flags]
 ```
 
 Example:
 
 ```bash
-simd query feemarket base-fee ...
+evmd query feemarket base-fee ...
 ```
 
 Example Output:
@@ -300,13 +300,13 @@ base_fee: "512908936"
 The `block-gas` command allows users to query the block gas by height.
 
 ```bash
-simd query feemarket block-gas [flags]
+evmd query feemarket block-gas [flags]
 ```
 
 Example:
 
 ```bash
-simd query feemarket block-gas ...
+evmd query feemarket block-gas ...
 ```
 
 Example Output:
@@ -320,13 +320,13 @@ gas: "21000"
 The `params` command allows users to query the module params.
 
 ```bash
-simd query params subspace [subspace] [key] [flags]
+evmd query params subspace [subspace] [key] [flags]
 ```
 
 Example:
 
 ```bash
-simd query params subspace feemarket ElasticityMultiplier ...
+evmd query params subspace feemarket ElasticityMultiplier ...
 ```
 
 Example Output:

@@ -50,7 +50,7 @@ define the address with the `--rpc.laddr` flag when starting the node
 (default `tcp://127.0.0.1:26657`):
 
 ```bash
-simd start --rpc.laddr="tcp://127.0.0.1:26657"
+evmd start --rpc.laddr="tcp://127.0.0.1:26657"
 ```
 
 Then, start a websocket subscription with [ws](https://github.com/hashrocket/ws)

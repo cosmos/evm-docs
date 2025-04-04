@@ -1362,8 +1362,8 @@ A user can query and interact with the `evm` module using the CLI, JSON-RPC, gRP
 
 ### CLI
 
-Find below a list of `simd` commands added with the `x/vm` module.
-You can obtain the full list by using the `simd -h` command.
+Find below a list of `evmd` commands added with the `x/vm` module.
+You can obtain the full list by using the `evmd -h` command.
 
 #### Queries
 
@@ -1374,12 +1374,12 @@ The `query` commands allow users to query `evm` state.
 Allows users to query the smart contract code at a given address.
 
 ```bash
-simd query evm code ADDRESS [flags]
+evmd query evm code ADDRESS [flags]
 ```
 
 ```bash
 # Example
-$ simd query evm code 0x7bf7b17da59880d9bcca24915679668db75f9397
+$ evmd query evm code 0x7bf7b17da59880d9bcca24915679668db75f9397
 
 # Output
 code: "0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb5735e11e7d3adb6104e0c3ac55180b4ddf5e54d022cc5e8837f6a4f971b"
@@ -1390,12 +1390,12 @@ code: "0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb
 Allows users to query storage for an account with a given key and height.
 
 ```bash
-simd query evm storage ADDRESS KEY [flags]
+evmd query evm storage ADDRESS KEY [flags]
 ```
 
 ```bash
 # Example
-$ simd query evm storage 0x0f54f47bf9b8e317b214ccd6a7c3e38b893cd7f0 0 --height 0
+$ evmd query evm storage 0x0f54f47bf9b8e317b214ccd6a7c3e38b893cd7f0 0 --height 0
 
 # Output
 value: "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -1410,12 +1410,12 @@ The `tx` commands allow users to interact with the `evm` module.
 Allows users to build cosmos transactions from raw ethereum transaction.
 
 ```bash
-simd tx evm raw TX_HEX [flags]
+evmd tx evm raw TX_HEX [flags]
 ```
 
 ```bash
 # Example
-$ simd tx evm raw 0xf9ff74c86aefeb5f6019d77280bbb44fb695b4d45cfe97e6eed7acd62905f4a85034d5c68ed25a2e7a8eeb9baf1b84
+$ evmd tx evm raw 0xf9ff74c86aefeb5f6019d77280bbb44fb695b4d45cfe97e6eed7acd62905f4a85034d5c68ed25a2e7a8eeb9baf1b84
 
 # Output
 value: "0x0000000000000000000000000000000000000000000000000000000000000000"

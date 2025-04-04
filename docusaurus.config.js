@@ -56,7 +56,7 @@ const config = {
       name: "Cosmos EVM",
       denom: "stake",
       ticker: "STAKE",
-      binary: "simd",
+      binary: "evmd",
       testnet_denom: "tStake",
       testnet_ticker: "tSTAKE",
       rpc_url: "https://evmos.lava.build",
