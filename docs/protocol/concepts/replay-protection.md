@@ -37,5 +37,17 @@ by setting the `allow_unprotected_txs` field to `true` in the genesis of a local
 2. **Adjust Node Configuration**:
 When the global parameter is set accordingly, each node operator has the option to individually opt into allowing
 unprotected transactions to be sent to their nodes.
-This configuration is explained in the section on
-[node configuration](../../validate/setup-and-configuration/configuration.md#eip-155-replay-protection).
+
+The EIP-155 replay protection is enabled globally in the EVM module parameters.
+In case this is disabled as a global requirement, node operators can opt into supporting unprotected transactions
+by adjusting the corresponding setting in the [node configuration](https://github.com/cosmos/evm/blob/v0.1.0/server/config/toml.go#L74-L76):
+
+```toml
+# in $HOME/.evmosd/config/config.toml
+
+# AllowUnprotectedTxs restricts unprotected (non EIP-155 signed) transactions to be submitted via
+# the node's RPC when the global parameter is disabled.
+allow-unprotected-txs = true  # false by default
+```
+
+More information about EIP-155 can be found here: [EIP-155: Replay Protection](../../protocol/concepts/replay-protection.md).

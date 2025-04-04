@@ -5,7 +5,7 @@ sidebar_position: 8
 # State Export/Import
 
 Cosmos EVM can dump the entire application state to a JSON file.
-This, besides [upgrades](../../validate/upgrades),
+This, besides upgrades,
 can be useful for manual analysis of the state at a given height.
 
 ## Export State

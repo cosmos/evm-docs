@@ -1330,8 +1330,6 @@ By default, all block configuration fields but `ConstantinopleBlock`, are enable
 
 This parameter enforces [EIP-155 replay protection](../concepts/replay-protection.md) globally for all nodes
 partaking in consensus.
-If disabled, this delegates control of replay protection to the individual nodes
-(read more [here](../../validate/setup-and-configuration/configuration.md#eip-155-replay-protection)).
 
 ### Active Precompiles
 
