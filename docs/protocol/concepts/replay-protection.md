@@ -43,7 +43,7 @@ In case this is disabled as a global requirement, node operators can opt into su
 by adjusting the corresponding setting in the [node configuration](https://github.com/cosmos/evm/blob/v0.1.0/server/config/toml.go#L74-L76):
 
 ```toml
-# in $HOME/.evmosd/config/config.toml
+# in $HOME/.evmd/config/config.toml
 
 # AllowUnprotectedTxs restricts unprotected (non EIP-155 signed) transactions to be submitted via
 # the node's RPC when the global parameter is disabled.
