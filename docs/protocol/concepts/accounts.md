@@ -109,7 +109,7 @@ There are 3 main types of HRP for the `Addresses`/`PubKeys` available by default
 |--------------------|-----------------------|----------------------|-----------------|---------------------|--------------------|
 | Accounts           | `cosmos`               | `cosmospub`           | `eth_secp256k1` | `20`                | `33` (compressed)  |
 | Validator Operator | `cosmosvaloper`        | `cosmosvaloperpub`    | `eth_secp256k1` | `20`                | `33` (compressed)  |
-| Consensus Nodes    | `evmosvalcons`        | `evmosvalconspub`    | `ed25519`       | `20`                | `32`               |
+| Consensus Nodes    | `cosmosvalcons`        | `cosmosvalconspub`    | `ed25519`       | `20`                | `32`               |
 
 ### Address formats for clients
 

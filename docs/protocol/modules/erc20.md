@@ -184,7 +184,7 @@ type TokenPair struct {
 	// shows token mapping enable status
 	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	// ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external address
-	ContractOwner Owner `protobuf:"varint,4,opt,name=contract_owner,json=contractOwner,proto3,enum=evmos.erc20.v1.Owner" json:"contract_owner,omitempty"`
+	ContractOwner Owner `protobuf:"varint,4,opt,name=contract_owner,json=contractOwner,proto3,enum=cosmos.evm.erc20.v1.Owner" json:"contract_owner,omitempty"`
 }
 ```
 
@@ -270,12 +270,12 @@ For simplicity, the following description describes the registration of only one
 A user registers a native Cosmos Coin.
 Once the proposal passes (i.e is approved by governance),
 the ERC20 module uses a factory pattern to deploy an ERC20 token contract representation of the Cosmos Coin.
-Note that the native Evmos coin cannot be registered,
+Note that the native chain's coin cannot be registered,
 as any coin including "evm" in its denomination cannot be registered.
-Instead, the Evmos token can be converted by Nomand's wrapped Evmos (WEVMOS) contract.
+Instead, the chain's token can be converted by wrapping it in a contract.
 
 1. User submits a `RegisterCoinProposal`
-2. Validators of the Evmos Hub vote on the proposal using `MsgVote` and proposal passes
+2. The chain's validators vote on the proposal using `MsgVote` and proposal passes
 3. If Cosmos coin or IBC voucher exist on the bank module supply,
    create the [ERC20 token contract](https://github.com/cosmos/evm/blob/main/contracts/solidity/ERC20MinterBurnerDecimals.sol)
    on the EVM based on the ERC20Mintable
@@ -292,7 +292,7 @@ Once the proposal passes (i.e. is approved by governance),
 the ERC20 module creates a Cosmos coin representation of the ERC20 token.
 
 1. User submits a `RegisterERC20Proposal`
-2. Validators of the EVMOS chain vote on the proposal using `MsgVote` and proposal passes
+2. The chain's validators vote on the proposal using `MsgVote` and proposal passes
 3. If ERC-20 contract is deployed on the EVM module, create a bank coin `Metadata` from the ERC20 details.
 
 ### Token Pair Conversion
@@ -713,20 +713,20 @@ evmd tx gov submit-proposal proposal.json [flags]
 
 #### Queries
 
-| Verb   | Method                            | Description                    |
-| ------ | --------------------------------- | ------------------------------ |
-| `gRPC` | `evmos.erc20.v1.Query/Params`     | Get erc20 params               |
-| `gRPC` | `evmos.erc20.v1.Query/TokenPair`  | Get registered token pair      |
-| `gRPC` | `evmos.erc20.v1.Query/TokenPairs` | Get all registered token pairs |
-| `GET`  | `/evmos/erc20/v1/params`          | Get erc20 params               |
-| `GET`  | `/evmos/erc20/v1/token_pair`      | Get registered token pair      |
-| `GET`  | `/evmos/erc20/v1/token_pairs`     | Get all registered token pairs |
+| Verb   | Method                                 | Description                    |
+| ------ |----------------------------------------| ------------------------------ |
+| `gRPC` | `cosmos.evm.erc20.v1.Query/Params`     | Get erc20 params               |
+| `gRPC` | `cosmos.evm.erc20.v1.Query/TokenPair`  | Get registered token pair      |
+| `gRPC` | `cosmos.evm.erc20.v1.Query/TokenPairs` | Get all registered token pairs |
+| `GET`  | `/cosmos/evm/erc20/v1/params`          | Get erc20 params               |
+| `GET`  | `/cosmos/evm/erc20/v1/token_pair`      | Get registered token pair      |
+| `GET`  | `/cosmos/evm/erc20/v1/token_pairs`     | Get all registered token pairs |
 
 #### Transactions
 
-| Verb   | Method                             | Description                    |
-| ------ | ---------------------------------- | ------------------------------ |
-| `gRPC` | `evmos.erc20.v1.Msg/ConvertCoin`   | Convert a Cosmos Coin to ERC20 |
-| `gRPC` | `evmos.erc20.v1.Msg/ConvertERC20`  | Convert a ERC20 to Cosmos Coin |
-| `GET`  | `/evmos/erc20/v1/tx/convert_coin`  | Convert a Cosmos Coin to ERC20 |
-| `GET`  | `/evmos/erc20/v1/tx/convert_erc20` | Convert a ERC20 to Cosmos Coin |
+| Verb   | Method                                  | Description                    |
+| ------ |-----------------------------------------| ------------------------------ |
+| `gRPC` | `cosmos.evm.erc20.v1.Msg/ConvertCoin`   | Convert a Cosmos Coin to ERC20 |
+| `gRPC` | `cosmos.evm.erc20.v1.Msg/ConvertERC20`  | Convert a ERC20 to Cosmos Coin |
+| `GET`  | `/cosmos/evm/erc20/v1/tx/convert_coin`  | Convert a Cosmos Coin to ERC20 |
+| `GET`  | `/cosmos/evm/erc20/v1/tx/convert_erc20` | Convert a ERC20 to Cosmos Coin |
