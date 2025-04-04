@@ -14,7 +14,7 @@ function defineSection(section, options = {}) {
       id: section,
       sidebarPath: require.resolve('./sidebars.js'),
       breadcrumbs: true,
-      editUrl: 'https://github.com/evmos/docs/tree/main/',
+      editUrl: 'https://github.com/cosmos/evm-docs/tree/main/',
       ...options,
     }),
   ];
