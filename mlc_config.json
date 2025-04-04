@@ -1,0 +1,13 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost:8877"
+    },
+    {
+      "pattern": "^http://localhost:9090"
+    },
+  ],
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackRetryDelay": "20s"
+}
