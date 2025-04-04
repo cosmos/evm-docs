@@ -23,7 +23,7 @@ contract SimpleStaker {
     /// @dev stake a given amount of tokens.
     /// @dev This emits an Delegate event.
     /// @param _validatorAddr The address of the validator.
-    /// @param _amount The amount of tokens to stake in aevmos.
+    /// @param _amount The amount of tokens to stake in atoken.
     function stakeTokens(
         string memory _validatorAddr,
         uint256 _amount

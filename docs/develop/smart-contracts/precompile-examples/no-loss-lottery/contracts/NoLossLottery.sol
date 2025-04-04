@@ -53,7 +53,7 @@ contract NoLossLottery {
 
     // Deposit into the contract
     function deposit() payable external {
-        require(msg.value % 1 ether == 0, "Amount must be a whole number of Evmos");
+        require(msg.value % 1 ether == 0, "Amount must be a whole number of Cosmos EVM");
         deposits[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }
@@ -66,9 +66,9 @@ contract NoLossLottery {
         deposits[msg.sender] += unbondingDelegations[msg.sender].amount;
         // Make sure that the sender has balance in our deposits map
         require(deposits[msg.sender] >= _amount, "Deposit amount larger than requested withdraw");
-        // Transfer the requested amount of Evmos to the sender.
+        // Transfer the requested amount of token to the sender.
         (bool sent,) = payable(msg.sender).call{value: _amount}("");
-        require(sent, "Failed to send Evmos");
+        require(sent, "Failed to send token");
         delete unbondingDelegations[msg.sender];
         emit Withdraw(msg.sender, _amount);
     }
@@ -109,7 +109,7 @@ contract NoLossLottery {
 
     // Enters the lottery by delegating to a validator
     function enterLottery(string memory _validatorAddr, uint256 _amount) public {
-        require(_amount % 1 ether == 0, "Amount must be a whole number of Evmos");
+        require(_amount % 1 ether == 0, "Amount must be a whole number of token");
         require(_amount <= deposits[msg.sender], "This address does not hold a deposit amount with the lottery");
         _approveRequiredMsgs(_amount);
         STAKING_CONTRACT.delegate(address(this), _validatorAddr, _amount);

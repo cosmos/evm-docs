@@ -8,13 +8,13 @@ contract ICS20Test {
     // The constants for channel, port and base denom
     string private channel = "channel-0";
     string private port = "transfer";
-    string private baseDenom = "aevmos";
+    string private baseDenom = "atoken";
 
     // Default allowed list is empty indicating no restrictions
     string[] private defaultAllowList = new string[](0);
 
     // Sends coins to Osmosis chain via IBC transfer on the specified channel and port.
-    function sendEvmosToOsmosis(uint256 _amount) public {
+    function sendTokenToOsmosis(uint256 _amount) public {
         // Approve only the amount to be send
         _approveTransfer(_amount);
         // Send IBC transfer using the interface function `transfer`
@@ -33,7 +33,7 @@ contract ICS20Test {
 
     // Creates an approval allocation against the smart contract for IBC transfers.
     function _approveTransfer(uint256 _amount) public {
-        // Create the spend limit of coins, in this case only aevmos
+        // Create the spend limit of coins, in this case only atoken
         Coin[] memory spendLimit = new Coin[](1);
         spendLimit[0] = Coin(baseDenom, _amount);
         // Create allocation for coins on the specified channel and port

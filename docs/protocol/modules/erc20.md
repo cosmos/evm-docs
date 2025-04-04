@@ -615,12 +615,12 @@ to a Cosmos Coin by transferring the Tokens through a `MsgEthereumTx`  to the `M
 
 ### CLI
 
-Find below a list of  `evmosd` commands added with the  `x/erc20` module.
-You can obtain the full list by using the `evmosd -h` command.
+Find below a list of  `evmd` commands added with the  `x/erc20` module.
+You can obtain the full list by using the `evmd -h` command.
 A CLI command can look like this:
 
 ```bash
-evmosd query erc20 params
+evmd query erc20 params
 ```
 
 #### Queries
@@ -649,7 +649,7 @@ Submit a proposal to register a Cosmos coin to the erc20 along with an initial d
 Upon passing, the proposal details must be supplied via a JSON file.
 
 ```bash
-evmosd tx gov submit-legacy-proposal register-coin METADATA_FILE [flags]
+evmd tx gov submit-legacy-proposal register-coin METADATA_FILE [flags]
 ```
 
 Where METADATA_FILE contains (example):
@@ -687,7 +687,7 @@ To register multiple tokens in one proposal pass them after each other e.g.
 `register-erc20 <contract-address1> <contract-address2>`.
 
 ```bash
-evmosd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
+evmd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
 ```
 
 **`toggle-token-conversion`**
@@ -695,7 +695,7 @@ evmosd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
 Allows users to submit a `ToggleTokenConversionProposal`.
 
 ```bash
-evmosd tx gov submit-legacy-proposal toggle-token-conversion TOKEN [flags]
+evmd tx gov submit-legacy-proposal toggle-token-conversion TOKEN [flags]
 ```
 
 **Update Params**
@@ -706,7 +706,7 @@ To do this, you will have to provide a JSON file with the correspondiong message
 For more information on how to draft a proposal, refer to the [Drafting a proposal section](../evmos-cli/proposal-draft.md).
 
 ```bash
-evmosd tx gov submit-proposal proposal.json [flags]
+evmd tx gov submit-proposal proposal.json [flags]
 ```
 
 ### gRPC

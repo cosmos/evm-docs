@@ -14,11 +14,11 @@ contract StakingManager {
         require(success, "Failed to approve staking methods");
     }
 
-    /// @dev Approves a list of Cosmos staking transactions with a specific amount of tokens denominated in aevmos.
+    /// @dev Approves a list of Cosmos staking transactions with a specific amount of tokens denominated in atoken.
     /// @dev This creates a Cosmos Authorization Grant for the given methods.
     /// @dev This emits an Approval event.
     /// @param _methods The message type URLs of the methods to approve.
-    /// @param _amount The amount of tokens approved to be spent in aevmos.
+    /// @param _amount The amount of tokens approved to be spent in atoken.
     function approveStakingMethods(string[] calldata _methods, uint256 _amount) public {
         bool success = STAKING_CONTRACT.approve(address(this), _amount, _methods);
         require(success, "Failed to approve staking methods");
@@ -26,7 +26,7 @@ contract StakingManager {
 
     /// @dev Returns the remaining number of tokens that spender will be allowed to spend
     /// on behalf of the owner through staking. This is zero by default.
-    /// @return remaining The remaining number of tokens available to be spent in aevmos.
+    /// @return remaining The remaining number of tokens available to be spent in atoken.
     function getAllowance() public view returns (uint256 remaining) {
         return STAKING_CONTRACT.allowance(address(this), msg.sender, MSG_DELEGATE);
     }
@@ -34,7 +34,7 @@ contract StakingManager {
     /// @dev stake a given amount of tokens. Returns the completion time of the staking transaction.
     /// @dev This emits an Delegate event.
     /// @param _validatorAddr The address of the validator.
-    /// @param _amount The amount of tokens to stake in aevmos.
+    /// @param _amount The amount of tokens to stake in atoken.
     /// @return completionTime The completion time of the staking transaction.
     function stakeTokens(string memory _validatorAddr, uint256 _amount) public returns (int64 completionTime) {
         return STAKING_CONTRACT.delegate(msg.sender, _validatorAddr, _amount);
@@ -44,7 +44,7 @@ contract StakingManager {
     /// @dev This emits a Redelegate event.
     /// @param _validatorSrcAddr The address of the source validator.
     /// @param _validatorDstAddr The address of the destination validator.
-    /// @param _amount The amount of tokens to redelegate in aevmos.
+    /// @param _amount The amount of tokens to redelegate in atoken.
     /// @return completionTime The completion time of the redelegate transaction.
     function redelegateTokens(string memory _validatorSrcAddr, string memory _validatorDstAddr, uint256 _amount) public returns (int64 completionTime) {
         return STAKING_CONTRACT.redelegate(msg.sender, _validatorSrcAddr, _validatorDstAddr, _amount);
@@ -53,7 +53,7 @@ contract StakingManager {
     /// @dev unstake a given amount of tokens. Returns the completion time of the unstaking transaction.
     /// @dev This emits an Undelegate event.
     /// @param _validatorAddr The address of the validator.
-    /// @param _amount The amount of tokens to unstake in aevmos.
+    /// @param _amount The amount of tokens to unstake in atoken.
     /// @return completionTime The completion time of the unstaking transaction.
     function unstakeTokens(string memory _validatorAddr, uint256 _amount) public returns (int64 completionTime) {
         return STAKING_CONTRACT.undelegate(msg.sender, _validatorAddr, _amount);
@@ -62,7 +62,7 @@ contract StakingManager {
     /// @dev cancel an unbonding delegation. Returns the completion time of the unbonding delegation cancellation transaction.
     /// @dev This emits an CancelUnbondingDelegation event.
     /// @param _validatorAddr The address of the validator.
-    /// @param _amount The amount of tokens to cancel the unbonding delegation in aevmos.
+    /// @param _amount The amount of tokens to cancel the unbonding delegation in atoken.
     /// @param _creationHeight The creation height of the unbonding delegation.
     function cancelUnbondingDelegation(string memory _validatorAddr, uint256 _amount, uint256 _creationHeight) public returns (int64 completionTime) {
         return STAKING_CONTRACT.cancelUnbondingDelegation(msg.sender, _validatorAddr, _amount, _creationHeight);

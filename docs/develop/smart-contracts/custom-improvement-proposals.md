@@ -81,7 +81,7 @@ func Enable0000(jt *vm.JumpTable) {
 Then, the function as to be associated with a name via a custom activator:
 
 ```go
-evmosActivators = map[string]func(*vm.JumpTable){
+cosmosEVMActivators = map[string]func(*vm.JumpTable){
     "evmos_0": eips.Enable0000,
 }
 ```

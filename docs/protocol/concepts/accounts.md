@@ -107,8 +107,8 @@ There are 3 main types of HRP for the `Addresses`/`PubKeys` available by default
 
 |                    | Address bech32 Prefix | Pubkey bech32 Prefix | Curve           | Address byte length | Pubkey byte length |
 |--------------------|-----------------------|----------------------|-----------------|---------------------|--------------------|
-| Accounts           | `evmos`               | `evmospub`           | `eth_secp256k1` | `20`                | `33` (compressed)  |
-| Validator Operator | `evmosvaloper`        | `evmosvaloperpub`    | `eth_secp256k1` | `20`                | `33` (compressed)  |
+| Accounts           | `cosmos`               | `cosmospub`           | `eth_secp256k1` | `20`                | `33` (compressed)  |
+| Validator Operator | `cosmosvaloper`        | `cosmosvaloperpub`    | `eth_secp256k1` | `20`                | `33` (compressed)  |
 | Consensus Nodes    | `evmosvalcons`        | `evmosvalconspub`    | `ed25519`       | `20`                | `32`               |
 
 ### Address formats for clients

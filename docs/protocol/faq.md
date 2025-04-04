@@ -33,6 +33,6 @@ of security and performance, and you can afford to sacrifice some compatibility,
 
 <summary><b>Where can I find the Protobuf interfaces for Cosmos EVM?</b></summary>
 
-Head over to evmOS's [Buf](https://buf.build/evmos).
+Head over to Cosmos's [Buf](https://buf.build/cosmos).
 
 </details>
