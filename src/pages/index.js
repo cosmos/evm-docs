@@ -8,7 +8,7 @@ function Home() {
   const context = useDocusaurusContext();
 
   return (
-    <Layout title="Homepage" description="Cosmos EVM Docs (Under construction!)">
+    <Layout title="Homepage" description="Documentation of Cosmos EVM, the canonical EVM solution for building EVM compatible L1s.">
       <main>
         <br />
         <h1 align="center" style={{ fontWeight: "750" }}>
