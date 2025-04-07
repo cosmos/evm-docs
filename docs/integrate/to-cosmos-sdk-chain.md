@@ -1,6 +1,6 @@
 # Converting a Cosmos SDK Chain to an EVM Chain: Step-by-Step Guide
 
-This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your existing Cosmos SDK blockchain.
+This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your existing Cosmos SDK blockchain. Big thanks to Reece & the [Spawn](https://github.com/rollchains/spawn) team for their valuable contributions to this page.
 
 This guide is specifically designed for chains that haven't launched yet. If you're building a new Cosmos SDK chain and want to include EVM compatibility from the start, these instructions will walk you through the process step by step.
 
