@@ -25,5 +25,3 @@ of these are using the coins for staking, IBC transfers, governance deposits and
 
 Cosmos EVM is compatible with ERC20 tokens and other non-fungible token standards (EIP721, EIP1155)
 that are natively supported by the EVM.
-
-For more information on how we handle token registration, head over [here](./../../develop/mainnet#token-registration).
