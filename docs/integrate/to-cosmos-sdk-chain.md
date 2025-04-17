@@ -441,7 +441,7 @@ if err := evmAppOptions(bApp.ChainID()); err != nil {
 	// Initialize the EVM application configuration
 	panic(fmt.Errorf("failed to initialize EVM app configuration: %w", err))
 }
-	```
+```
 
 7. Add EVM store keys:
 ```go
