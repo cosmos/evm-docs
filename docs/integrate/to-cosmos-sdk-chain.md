@@ -925,10 +925,10 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 			opts := txWithExtensions.GetExtensionOptions()
 			if len(opts) > 0 {
 				switch typeURL := opts[0].GetTypeUrl(); typeURL {
-				case "/os.evm.v1.ExtensionOptionsEthereumTx":
+				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
 					// handle as *evmtypes.MsgEthereumTx
 					anteHandler = newMonoEVMAnteHandler(options)
-				case "/os.types.v1.ExtensionOptionDynamicFeeTx":
+				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
 					anteHandler = NewCosmosAnteHandler(options)
 				default:
@@ -1019,7 +1019,7 @@ func initRootCmd(
 }
 ```
 
-## Step 10: Update root.go to Use EVM-Compatible Keyring
+## Step 10: Update root.go to Use EVM-Compatible Keyring and Coin Type
 
 Update `cmd/evmd/root.go`:
 ```go
@@ -1038,8 +1038,14 @@ func NewRootCmd() *cobra.Command {
     clientCtx = clientCtx.
 		// ... existing options
         WithBroadcastMode(flags.FlagBroadcastMode). // Add this
-        WithKeyringOptions(evmkeyring.Option()). // Add this
-        WithLedgerHasProtobuf(true).               // Add this
+        WithKeyringOptions(evmkeyring.Option()).    // Add this
+        WithLedgerHasProtobuf(true)                 // Add this
+
+    // Update the coin type
+    cfg := sdk.GetConfig()
+    cfg.SetCoinType(evmtypes.Bip44CoinType)
+    cfg.SetPurpose(sdk.Purpose)
+    cfg.Seal()
 }
 ```
 
