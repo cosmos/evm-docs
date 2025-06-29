@@ -44,17 +44,17 @@ replace (
 
 ## Step 2: Update Chain Configuration
 
-**Purpose:** To align fundamental chain parameters with EVM conventions for compatibility with Ethereum tooling and standards.
-
-**Important Note:** Cosmos EVM now separates the Cosmos chain ID from the EVM chain ID, allowing chains to have regular Cosmos chain IDs while maintaining EIP-155 compatibility for the EVM.
+**Important Note:** Cosmos EVM requires two separate chain-ids:
+- Cosmos chain-id [string], used for interactions through the Tendermint RPC.
+- EVM chain-id [int], to ensure compatibility with standard EVM tooling.
 
 **Changes:**
 
 1.  **Chain ID Configuration:** Configure both Cosmos and EVM chain IDs separately.
     *   **Cosmos Chain ID:** Can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
     *   **EVM Chain ID:** Must be an integer following EIP-155 (e.g., `9000`)
-    *   **Configuration:** The EVM chain ID is configured separately in the EVM module configuration
-    *   **Example Configuration:**
+    *   **Configuration:** The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
+    *   **Example Config:**
         ```go
         // In your app configuration
         const CosmosChainID = "mychain-1"  // Standard Cosmos format
@@ -68,7 +68,7 @@ replace (
         *   `genesis.json`: Configure both chain IDs appropriately
 
 2.  **Account Configuration:** Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility.
-    *   **Key Algorithm:** Set to `eth_secp256k1` (not the default `secp256k1`)
+    *   **Key Algorithm:** Defaults to `eth_secp256k1` (previously `secp256k1`)
     *   **Coin Type (SLIP-0044):** Change from `118` (Cosmos default) to `60` (Ethereum standard)
     *   **Locations & Examples:**
         *   `app/app.go`: `const CoinType uint32 = 60`
@@ -116,13 +116,11 @@ replace (
 
 ## Step 3: Configure Automatic ERC20 Token Registration for IBC Tokens
 
-**Purpose:** To enable automatic creation of ERC20 representations for incoming IBC tokens.
-
-**Important:** This functionality is built into Cosmos EVM and automatically registers ERC20 extensions for single-hop IBC tokens (those with "ibc/" prefix) when they are received.
+**Important:** This enabled automatic registration of ERC20 extensions for single-hop IBC tokens (those with "ibc/" prefix) when they are received.
 
 ### How It Works
 
-The Cosmos EVM x/erc20 module automatically registers ERC20 token pairs for incoming IBC tokens through the `OnRecvPacket` callback. When an IBC token is received:
+The Cosmos EVM x/erc20 module automatically registers ERC20 token pairs for incoming IBC tokens through the [`OnRecvPacket`](https://github.com/cosmos/evm/blob/f7a39221339f503c9b28b3033b4ead0d24512797/x/erc20/keeper/ibc_callbacks.go#L35) callback. When an IBC token is received:
 
 1. The system checks if a token pair already exists for the denomination
 2. For single-hop IBC coins (prefixed with "ibc/"), it automatically calls `RegisterERC20Extension`
@@ -156,18 +154,11 @@ erc20Params.EnableEVMHook = true
 
 3. **Ensure Proper Module Wiring**: The modules must be wired correctly in your app.go as shown in the subsequent steps.
 
-### Important Notes:
-
-- **Automatic Registration**: Single-hop IBC tokens (with "ibc/" prefix) are automatically registered
-- **Multi-hop Tokens**: Tokens from multi-hop IBC transfers may require additional configuration
-- **Native Tokens**: The system prevents registration of native staking tokens
-- **Events**: Registration events are emitted for tracking and monitoring
-
-This built-in functionality eliminates the need for governance proposals to register each new IBC token, providing a seamless user experience.
+This built-in functionality eliminates the need to manually register each new IBC token, providing a seamless user experience.
 
 ## Step 4: Create EVM Configuration File
 
-Create a new file `app/config.go` with the following content:
+Create a new file `app/config.go` with the following content. Note that you'll need to define your EVM chain ID constant (e.g., `const EVMChainID = 9000`) in your app constants or config:
 ```go
 package app
 
@@ -194,11 +185,10 @@ func NoOpEVMOptions(_ string) error {
 
 var sealed = false
 
-// ChainsCoinInfo is a map of the chain id and its corresponding EvmCoinInfo
-// that allows initializing the app with different coin info based on the
-// chain id
-var ChainsCoinInfo = map[string]evmtypes.EvmCoinInfo{
-	ChainID: {
+// ChainsCoinInfo maps EVM chain IDs to their corresponding coin configuration
+// This allows different configurations based on the EVM chain ID
+var ChainsCoinInfo = map[uint64]evmtypes.EvmCoinInfo{
+	9000: { // Your EVM chain ID
 		Denom:        BaseDenom,
 		DisplayDenom: DisplayDenom,
 		Decimals:     evmtypes.EighteenDecimals,
@@ -235,10 +225,9 @@ func EVMAppOptions(chainID string) error {
 		return err
 	}
 
-	// Configure the EVM chain ID (separate from Cosmos chain ID)
-	// This should be your EIP-155 compatible integer chain ID
-	evmChainID := big.NewInt(9000) // Replace with your EVM chain ID
-	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
+	// Get the EVM chain configuration based on the chain ID
+	// The EVM chain ID should be configured in your chain's config
+	ethCfg := evmtypes.DefaultChainConfig(chainID)
 
 	err = evmtypes.NewEVMConfigurator().
 		WithChainConfig(ethCfg).
