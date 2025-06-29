@@ -46,10 +46,16 @@ replace (
 
 **Purpose:** To align fundamental chain parameters with EVM conventions for compatibility with Ethereum tooling and standards.
 
+**Important Note:** Cosmos EVM uses a unified chain ID format that works for both Cosmos and EVM. The chain IDs are not separate - they use a single format that satisfies both EIP-155 (Ethereum) and Cosmos requirements.
+
 **Changes:**
 
-1.  **Chain ID Format:** Ethereum tools often expect chain IDs in a specific format (e.g., `name_number-version`). Update your chain ID accordingly.
+1.  **Chain ID Format:** The chain ID must follow the format `{identifier}_{EIP155}-{version}` to work with both Cosmos and Ethereum tools.
     *   **Example:** `"mychain-1"` -> `"mychain_9000-1"`
+    *   **Explanation:** 
+        *   `mychain` - The identifier for your chain
+        *   `9000` - The EIP-155 chain ID number for EVM compatibility
+        *   `1` - The version number (increment during chain upgrades)
     *   **Locations & Examples:**
         *   `app/app.go`: `const ChainID = "mychain_9000-1"`
         *   `Makefile`: Search and replace `localchain-1` or similar with `mychain_9000-1`.
@@ -57,7 +63,9 @@ replace (
         *   `chains/*.json`: Update `"chain_id": "mychain_9000-1"`.
         *   `interchaintest/*`: Update chain ID constants/variables.
 
-2.  **Coin Type (SLIP-0044):** Change from `118` (Cosmos default) to `60` (Ethereum standard) for key derivation compatibility.
+2.  **Account Configuration:** Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility.
+    *   **Key Algorithm:** Set to `eth_secp256k1` (not the default `secp256k1`)
+    *   **Coin Type (SLIP-0044):** Change from `118` (Cosmos default) to `60` (Ethereum standard)
     *   **Locations & Examples:**
         *   `app/app.go`: `const CoinType uint32 = 60`
         *   `chain_registry.json`: `"slip44": 60`
