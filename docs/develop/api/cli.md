@@ -6,6 +6,28 @@ sidebar_position: 3
 
 The Cosmos EVM CLI (`evmd`) provides a comprehensive command-line interface for interacting with a Cosmos EVM-enabled blockchain. This includes commands for node operations, key management, querying blockchain state, submitting transactions, and more.
 
+:::info Node Requirements
+To use the `query` and `tx` commands, your `evmd` node must either:
+- Be fully synced with the network you're interacting with, OR
+- Be configured to use an external RPC endpoint in `~/.evmd/config/client.toml`
+
+Example client.toml configuration:
+```toml
+# The network chain ID
+chain-id = "evmos_9001-2"
+# The keyring's backend
+keyring-backend = "os"
+# CLI output format
+output = "text"
+# <host>:<port> to CometBFT RPC interface for this chain
+node = "tcp://localhost:26657"
+# Transaction broadcasting mode (sync|async)
+broadcast-mode = "sync"
+```
+
+To use an external RPC, update the `node` field to point to a public or private RPC endpoint.
+:::
+
 ## Global Flags
 
 These flags are available for all commands:
