@@ -51,7 +51,7 @@ subscribe to [state logs](https://eth.wiki/json-rpc/API#eth_newfilter),
 [blocks](https://eth.wiki/json-rpc/API#eth_newblockfilter) or [pending transactions](https://eth.wiki/json-rpc/API#eth_newpendingtransactionfilter)
 changes.
 
-Under the hood, it uses the Tendermint RPC client's event system to process subscriptions that are
+Under the hood, it uses the CometBFT RPC client's event system to process subscriptions that are
 then formatted to Ethereum-compatible events.
 
 ```bash
@@ -74,10 +74,10 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getFilterChanges","params":[
 The Ethereum Websocket allows you to subscribe to Ethereum logs and events emitted in smart contracts. This way you
 don't need to continuously make requests when you want specific information.
 
-Since Cosmos EVM is built with the Cosmos SDK framework and uses Tendermint Core as it's consensus Engine, it inherits the
-[event format](./tendermint-rpc#subscribing-to-cosmos-and-tendermint-events) from them. However, in order to support the
+Since Cosmos EVM is built with the Cosmos SDK framework and uses CometBFT as it's consensus Engine, it inherits the
+[event format](./tendermint-rpc#subscribing-to-cosmos-and-cometbft-events) from them. However, in order to support the
 native Web3 compatibility for websockets of the [Ethereum's PubSubAPI](https://geth.ethereum.org/docs/interacting-with-geth/rpc/pubsub),
-Cosmos EVM needs to cast the Tendermint responses retrieved into the Ethereum types.
+Cosmos EVM needs to cast the CometBFT responses retrieved into the Ethereum types.
 
 You can start a connection with the Ethereum websocket using the `--json-rpc.ws-address` flag when starting
 the node (default `"0.0.0.0:8546"`):
@@ -89,7 +89,7 @@ evmd start --json-rpc.address="0.0.0.0:8545" --json-rpc.ws-address="0.0.0.0:8546
 Then, start a websocket subscription with [`ws`](https://github.com/hashrocket/ws)
 
 ```bash
-# connect to tendermint websocket at port 8546 as defined above
+# connect to CometBFT websocket at port 8546 as defined above
 ws ws://localhost:8546/
 
 # subscribe to new Ethereum-formatted block Headers

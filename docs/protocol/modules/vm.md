@@ -27,7 +27,7 @@ interaction with the EVM state machine (state transitions),
 and the use of EVM tooling.
 It can be used on Cosmos application-specific blockchains,
 which alleviate the aforementioned concerns through high transaction throughput
-via [Tendermint Core](https://github.com/tendermint/tendermint), fast transaction finality,
+via [CometBFT](https://github.com/cometbft/cometbft), fast transaction finality,
 and horizontal scalability via [IBC](https://ibcprotocol.org/).
 
 The `x/vm` module is part of the [Cosmos EVM library](https://pkg.go.dev/github.com/cosmos/evm).
@@ -66,7 +66,7 @@ vm/
 │   ├── chain_config.go
 │   ├── codec.go          # Type registration for encoding
 │   ├── errors.go         # Module-specific errors
-│   ├── events.go         # Events exposed to the Tendermint PubSub/Websocket
+│   ├── events.go         # Events exposed to the CometBFT PubSub/Websocket
 │   ├── genesis.go        # Genesis state for the module
 │   ├── journal.go        # Ethereum Journal of state transitions
 │   ├── keys.go           # Store keys and utility functions
@@ -255,14 +255,14 @@ The implementation of this interface is what makes the Cosmos EVM compatible.
 
 ### Consensus Engine
 
-The application using the `x/vm` module interacts with the Tendermint Core Consensus Engine
+The application using the `x/vm` module interacts with the CometBFT Consensus Engine
 over an Application Blockchain Interface (ABCI).
-Together, the application and Tendermint Core form the programs that run a complete blockchain
+Together, the application and CometBFT form the programs that run a complete blockchain
 and combine business logic with decentralized data storage.
 
 Ethereum transactions which are submitted to the `x/vm` module take part in this consensus process
 before being executed and changing the application state.
-We encourage to understand the basics of the [Tendermint consensus engine](https://docs.tendermint.com/main/introduction/what-is-tendermint.html#intro-to-abci)
+We encourage to understand the basics of the [CometBFT consensus engine](https://docs.tendermint.com/main/introduction/what-is-tendermint.html#intro-to-abci)
 in order to understand state transitions in detail.
 
 ### Transaction Logs

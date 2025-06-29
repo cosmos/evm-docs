@@ -2,11 +2,11 @@
 sidebar_position: 4
 ---
 
-# Tendermint RPC
+# CometBFT RPC
 
-The Tendermint RPC allows you to query transactions, blocks, consensus state, broadcast transactions, etc.
+The CometBFT RPC allows you to query transactions, blocks, consensus state, broadcast transactions, etc.
 
-The latest Tendermint RPC documentations can be found [here](https://docs.tendermint.com/v0.34/rpc/). Tendermint
+The latest CometBFT RPC documentations can be found [here](https://docs.tendermint.com/v0.34/rpc/). CometBFT
 supports the following RPC protocols:
 
 - URI over HTTP
@@ -26,11 +26,11 @@ curl localhost:26657/block?height=5
 ## RPC/HTTP
 
 JSONRPC requests can be POST'd to the root RPC endpoint via HTTP. See the list
-of supported Tendermint RPC endpoints using Swagger [here](../api#clients).
+of supported CometBFT RPC endpoints using Swagger [here](../api#clients).
 
 ## RPC/Websocket
 
-### Cosmos and Tendermint Events
+### Cosmos and CometBFT Events
 
 `Event`s are objects that contain information about the execution of the application
 and are triggered after a block is committed. They are mainly used by service providers
@@ -43,9 +43,9 @@ More on Events:
 
 ### Subscribing to Events via Websocket
 
-Tendermint Core provides a [Websocket](https://docs.tendermint.com/v0.34/tendermint-core/subscription.html) connection
-to subscribe or unsubscribe to Tendermint `Events`.
-To start a connection with the Tendermint websocket you need to
+CometBFT provides a [Websocket](https://docs.tendermint.com/v0.34/tendermint-core/subscription.html) connection
+to subscribe or unsubscribe to CometBFT `Events`.
+To start a connection with the CometBFT websocket you need to
 define the address with the `--rpc.laddr` flag when starting the node
 (default `tcp://127.0.0.1:26657`):
 
