@@ -110,7 +110,117 @@ replace (
 
 ---
 
-## Step 3: Create EVM Configuration File
+## Step 3: Configure IBC Middleware for Automatic ERC20 Token Registration
+
+**Purpose:** To enable automatic creation of ERC20 representations for incoming IBC tokens without requiring governance proposals.
+
+**Important:** This is a critical step that enables seamless interoperability between IBC tokens and the EVM. Without this middleware, users would need to manually register each IBC token through governance before it can be used in the EVM.
+
+**Current State:** The base Cosmos EVM requires governance proposals to register token pairs. However, the infrastructure supports automatic conversion through middleware implementation.
+
+### Option 1: Using the Built-in Infrastructure (Recommended for Most Chains)
+
+The Cosmos EVM already includes an extended IBC transfer module with ERC20 integration. To enable it:
+
+1. **Use the Extended Transfer Module** (already shown in Step 6):
+```go
+// Import the extended transfer module
+import transfer "github.com/cosmos/evm/x/ibc/transfer"
+import ibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
+```
+
+2. **Configure EVM Hooks** in your app initialization:
+```go
+// The EVM hooks enable automatic conversion when tokens are transferred
+app.EVMKeeper.WithStaticPrecompiles(corePrecompiles)
+```
+
+3. **Enable Auto-Conversion** through module parameters:
+```go
+// In your genesis configuration or upgrade handler
+erc20Params := erc20types.DefaultParams()
+erc20Params.EnableErc20 = true
+erc20Params.EnableEVMHook = true
+app.Erc20Keeper.SetParams(ctx, erc20Params)
+```
+
+### Option 2: Implementing Custom Middleware (For Advanced Use Cases)
+
+For chains that need automatic registration without governance, implement custom IBC middleware:
+
+```go
+// Example middleware structure (create in app/middleware/erc20_middleware.go)
+type ERC20AutoRegisterMiddleware struct {
+    app         porttypes.IBCModule
+    keeper      ibctransferkeeper.Keeper
+    erc20Keeper erc20keeper.Keeper
+}
+
+func NewERC20AutoRegisterMiddleware(
+    app porttypes.IBCModule,
+    keeper ibctransferkeeper.Keeper,
+    erc20Keeper erc20keeper.Keeper,
+) ERC20AutoRegisterMiddleware {
+    return ERC20AutoRegisterMiddleware{
+        app:         app,
+        keeper:      keeper,
+        erc20Keeper: erc20Keeper,
+    }
+}
+
+// OnRecvPacket implements the IBCModule interface
+func (im ERC20AutoRegisterMiddleware) OnRecvPacket(
+    ctx sdk.Context,
+    packet channeltypes.Packet,
+    relayer sdk.AccAddress,
+) ibcexported.Acknowledgement {
+    // Let the transfer module handle the packet first
+    ack := im.app.OnRecvPacket(ctx, packet, relayer)
+    
+    // Only process successful transfers
+    if !ack.Success() {
+        return ack
+    }
+    
+    // Parse the transfer data
+    var data transfertypes.FungibleTokenPacketData
+    if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+        return ack
+    }
+    
+    // Check if token pair already exists
+    denom := data.Denom
+    if !im.erc20Keeper.IsTokenPairRegistered(ctx, denom) {
+        // Auto-register the token pair
+        // This is a simplified example - implement based on your requirements
+        im.registerTokenPair(ctx, denom)
+    }
+    
+    return ack
+}
+
+// Wire the middleware in app.go
+transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
+erc20Middleware := NewERC20AutoRegisterMiddleware(
+    transferIBCModule,
+    app.TransferKeeper,
+    app.Erc20Keeper,
+)
+
+// Register with IBC
+app.IBCKeeper.SetRoute(ibctransfertypes.ModuleName, erc20Middleware)
+```
+
+### Important Considerations:
+
+1. **Non-Atomic Behavior:** IBC transfers should succeed even if ERC20 registration fails
+2. **Security:** Validate token metadata before auto-registration
+3. **Gas Costs:** Consider who pays for the ERC20 contract deployment
+4. **Governance Override:** Allow governance to modify auto-registered pairs if needed
+
+**Note:** For production use, consider studying implementations like Canto's x/onboarding module as a reference for robust auto-registration middleware.
+
+## Step 4: Create EVM Configuration File
 
 Create a new file `app/config.go` with the following content:
 ```go
@@ -207,7 +317,7 @@ func setBaseDenom(ci evmtypes.EvmCoinInfo) error {
 }
 ```
 
-## Step 4: Create Token Pair Configuration
+## Step 5: Create Token Pair Configuration
 
 Create a new file `app/token_pair.go` with the following content. This is used as a mock token pair the DefaultGenesis function for testing and for spinning up a local chain:
 ```go
@@ -230,7 +340,7 @@ var ExampleTokenPairs = []erc20types.TokenPair{
 }
 ```
 
-## Step 5: Create Precompiles Configuration
+## Step 6: Create Precompiles Configuration
 
 Create a file `app/precompiles.go`:
 ```go
@@ -356,7 +466,7 @@ func NewAvailableStaticPrecompiles(
 }
 ```
 
-## Step 6: Update app.go wiring to Include EVM Modules
+## Step 7: Update app.go wiring to Include EVM Modules
 
 Modify your `app/app.go` file to:
 
@@ -686,7 +796,7 @@ func (app *ChainApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 }
 ```
 
-## Step 7: Update Every Place the EVMAppOptions is Used
+## Step 8: Update Every Place the EVMAppOptions is Used
 
 Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all relevant files.
 
@@ -728,7 +838,7 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
     }
     ```
 
-## Step 8: Create EVM Ante Handler Files
+## Step 9: Create EVM Ante Handler Files
 
 The EVM requires a different set of AnteHandlers compared to Cosmos. To handle those transactions,
 set up the handlers as follows in an `ante` folder:
@@ -963,7 +1073,7 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 }
 ```
 
-## Step 9: Update Command Files
+## Step 10: Update Command Files
 
 Apply these changes to your chain's command files `cmd/evmd/commands.go`:
 ```go
@@ -1027,7 +1137,7 @@ func initRootCmd(
 }
 ```
 
-## Step 10: Update root.go to Use EVM-Compatible Keyring and Coin Type
+## Step 11: Update root.go to Use EVM-Compatible Keyring and Coin Type
 
 Update `cmd/evmd/root.go`:
 ```go
@@ -1057,7 +1167,7 @@ func NewRootCmd() *cobra.Command {
 }
 ```
 
-## Step 11: Final Checks and Running Your Local Chain
+## Step 12: Final Checks and Running Your Local Chain
 
 Refer to the following script for an example for how to set up a local testnet: https://github.com/cosmos/evm/blob/main/local_node.sh
 

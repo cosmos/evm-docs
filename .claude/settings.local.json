@@ -7,7 +7,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:evm.cosmos.network)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
