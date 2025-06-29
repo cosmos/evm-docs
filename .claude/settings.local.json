@@ -8,7 +8,9 @@
       "WebFetch(domain:evm.cosmos.network)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run start:*)",
+      "Bash(npm install)"
     ],
     "deny": []
   }

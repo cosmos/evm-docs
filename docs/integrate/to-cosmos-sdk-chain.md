@@ -46,22 +46,26 @@ replace (
 
 **Purpose:** To align fundamental chain parameters with EVM conventions for compatibility with Ethereum tooling and standards.
 
-**Important Note:** Cosmos EVM uses a unified chain ID format that works for both Cosmos and EVM. The chain IDs are not separate - they use a single format that satisfies both EIP-155 (Ethereum) and Cosmos requirements.
+**Important Note:** Cosmos EVM now separates the Cosmos chain ID from the EVM chain ID, allowing chains to have regular Cosmos chain IDs while maintaining EIP-155 compatibility for the EVM.
 
 **Changes:**
 
-1.  **Chain ID Format:** The chain ID must follow the format `{identifier}_{EIP155}-{version}` to work with both Cosmos and Ethereum tools.
-    *   **Example:** `"mychain-1"` -> `"mychain_9000-1"`
-    *   **Explanation:** 
-        *   `mychain` - The identifier for your chain
-        *   `9000` - The EIP-155 chain ID number for EVM compatibility
-        *   `1` - The version number (increment during chain upgrades)
-    *   **Locations & Examples:**
-        *   `app/app.go`: `const ChainID = "mychain_9000-1"`
-        *   `Makefile`: Search and replace `localchain-1` or similar with `mychain_9000-1`.
-        *   `scripts/*.sh`: Update `CHAIN_ID` variables.
-        *   `chains/*.json`: Update `"chain_id": "mychain_9000-1"`.
-        *   `interchaintest/*`: Update chain ID constants/variables.
+1.  **Chain ID Configuration:** Configure both Cosmos and EVM chain IDs separately.
+    *   **Cosmos Chain ID:** Can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
+    *   **EVM Chain ID:** Must be an integer following EIP-155 (e.g., `9000`)
+    *   **Configuration:** The EVM chain ID is configured separately in the EVM module configuration
+    *   **Example Configuration:**
+        ```go
+        // In your app configuration
+        const CosmosChainID = "mychain-1"  // Standard Cosmos format
+        const EVMChainID = 9000             // EIP-155 integer
+        ```
+    *   **Locations to Update:**
+        *   `app/app.go`: Set your Cosmos chain ID constant
+        *   `app/config.go`: Configure EVM chain ID in the EVM options
+        *   `Makefile`: Use standard Cosmos chain ID
+        *   `scripts/*.sh`: Update `CHAIN_ID` variables with Cosmos chain ID
+        *   `genesis.json`: Configure both chain IDs appropriately
 
 2.  **Account Configuration:** Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility.
     *   **Key Algorithm:** Set to `eth_secp256k1` (not the default `secp256k1`)
@@ -110,115 +114,56 @@ replace (
 
 ---
 
-## Step 3: Configure IBC Middleware for Automatic ERC20 Token Registration
+## Step 3: Configure Automatic ERC20 Token Registration for IBC Tokens
 
-**Purpose:** To enable automatic creation of ERC20 representations for incoming IBC tokens without requiring governance proposals.
+**Purpose:** To enable automatic creation of ERC20 representations for incoming IBC tokens.
 
-**Important:** This is a critical step that enables seamless interoperability between IBC tokens and the EVM. Without this middleware, users would need to manually register each IBC token through governance before it can be used in the EVM.
+**Important:** This functionality is built into Cosmos EVM and automatically registers ERC20 extensions for single-hop IBC tokens (those with "ibc/" prefix) when they are received.
 
-**Current State:** The base Cosmos EVM requires governance proposals to register token pairs. However, the infrastructure supports automatic conversion through middleware implementation.
+### How It Works
 
-### Option 1: Using the Built-in Infrastructure (Recommended for Most Chains)
+The Cosmos EVM x/erc20 module automatically registers ERC20 token pairs for incoming IBC tokens through the `OnRecvPacket` callback. When an IBC token is received:
 
-The Cosmos EVM already includes an extended IBC transfer module with ERC20 integration. To enable it:
+1. The system checks if a token pair already exists for the denomination
+2. For single-hop IBC coins (prefixed with "ibc/"), it automatically calls `RegisterERC20Extension`
+3. An event is emitted upon successful registration
 
-1. **Use the Extended Transfer Module** (already shown in Step 6):
+### Configuration Requirements
+
+To enable this functionality, ensure the following in your chain setup:
+
+1. **Use the Extended Transfer Module** (shown in Step 7):
 ```go
 // Import the extended transfer module
 import transfer "github.com/cosmos/evm/x/ibc/transfer"
 import ibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
+
+// Initialize TransferKeeper with ERC20 keeper
+app.TransferKeeper = ibctransferkeeper.NewKeeper(
+    // ... other parameters ...
+    app.Erc20Keeper,  // This enables the IBC-ERC20 integration
+    // ... other parameters ...
+)
 ```
 
-2. **Configure EVM Hooks** in your app initialization:
+2. **Enable ERC20 Module Parameters**:
 ```go
-// The EVM hooks enable automatic conversion when tokens are transferred
-app.EVMKeeper.WithStaticPrecompiles(corePrecompiles)
-```
-
-3. **Enable Auto-Conversion** through module parameters:
-```go
-// In your genesis configuration or upgrade handler
+// In your genesis configuration
 erc20Params := erc20types.DefaultParams()
 erc20Params.EnableErc20 = true
 erc20Params.EnableEVMHook = true
-app.Erc20Keeper.SetParams(ctx, erc20Params)
 ```
 
-### Option 2: Implementing Custom Middleware (For Advanced Use Cases)
+3. **Ensure Proper Module Wiring**: The modules must be wired correctly in your app.go as shown in the subsequent steps.
 
-For chains that need automatic registration without governance, implement custom IBC middleware:
+### Important Notes:
 
-```go
-// Example middleware structure (create in app/middleware/erc20_middleware.go)
-type ERC20AutoRegisterMiddleware struct {
-    app         porttypes.IBCModule
-    keeper      ibctransferkeeper.Keeper
-    erc20Keeper erc20keeper.Keeper
-}
+- **Automatic Registration**: Single-hop IBC tokens (with "ibc/" prefix) are automatically registered
+- **Multi-hop Tokens**: Tokens from multi-hop IBC transfers may require additional configuration
+- **Native Tokens**: The system prevents registration of native staking tokens
+- **Events**: Registration events are emitted for tracking and monitoring
 
-func NewERC20AutoRegisterMiddleware(
-    app porttypes.IBCModule,
-    keeper ibctransferkeeper.Keeper,
-    erc20Keeper erc20keeper.Keeper,
-) ERC20AutoRegisterMiddleware {
-    return ERC20AutoRegisterMiddleware{
-        app:         app,
-        keeper:      keeper,
-        erc20Keeper: erc20Keeper,
-    }
-}
-
-// OnRecvPacket implements the IBCModule interface
-func (im ERC20AutoRegisterMiddleware) OnRecvPacket(
-    ctx sdk.Context,
-    packet channeltypes.Packet,
-    relayer sdk.AccAddress,
-) ibcexported.Acknowledgement {
-    // Let the transfer module handle the packet first
-    ack := im.app.OnRecvPacket(ctx, packet, relayer)
-    
-    // Only process successful transfers
-    if !ack.Success() {
-        return ack
-    }
-    
-    // Parse the transfer data
-    var data transfertypes.FungibleTokenPacketData
-    if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-        return ack
-    }
-    
-    // Check if token pair already exists
-    denom := data.Denom
-    if !im.erc20Keeper.IsTokenPairRegistered(ctx, denom) {
-        // Auto-register the token pair
-        // This is a simplified example - implement based on your requirements
-        im.registerTokenPair(ctx, denom)
-    }
-    
-    return ack
-}
-
-// Wire the middleware in app.go
-transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
-erc20Middleware := NewERC20AutoRegisterMiddleware(
-    transferIBCModule,
-    app.TransferKeeper,
-    app.Erc20Keeper,
-)
-
-// Register with IBC
-app.IBCKeeper.SetRoute(ibctransfertypes.ModuleName, erc20Middleware)
-```
-
-### Important Considerations:
-
-1. **Non-Atomic Behavior:** IBC transfers should succeed even if ERC20 registration fails
-2. **Security:** Validate token metadata before auto-registration
-3. **Gas Costs:** Consider who pays for the ERC20 contract deployment
-4. **Governance Override:** Allow governance to modify auto-registered pairs if needed
-
-**Note:** For production use, consider studying implementations like Canto's x/onboarding module as a reference for robust auto-registration middleware.
+This built-in functionality eliminates the need for governance proposals to register each new IBC token, providing a seamless user experience.
 
 ## Step 4: Create EVM Configuration File
 
@@ -228,6 +173,7 @@ package app
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -289,7 +235,10 @@ func EVMAppOptions(chainID string) error {
 		return err
 	}
 
-	ethCfg := evmtypes.DefaultChainConfig(chainID)
+	// Configure the EVM chain ID (separate from Cosmos chain ID)
+	// This should be your EIP-155 compatible integer chain ID
+	evmChainID := big.NewInt(9000) // Replace with your EVM chain ID
+	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
 
 	err = evmtypes.NewEVMConfigurator().
 		WithChainConfig(ethCfg).
