@@ -52,7 +52,7 @@ The examples also do not include the URL/IP & port combination which must be the
 | [`eth_getFilterChanges`](#eth_getfilterchanges)                                   | Eth       | ✔           | ✔      |                    |
 | [`eth_getFilterLogs`](#eth_getfilterlogs)                                         | Eth       | ✔           | ✔      |                    |
 | [`eth_getLogs`](#eth_getlogs)                                                     | Eth       | ✔           | ✔      |                    |
-| `eth_getTransactionbyBlockNumberAndIndex`                                         | Eth       |             | ✔      |                    |
+| [`eth_getTransactionByBlockNumberAndIndex`](#eth_gettransactionbyblocknumberandindex) | Eth       | ✔           | ✔      |                    |
 | `eth_getWork`                                                                     | Eth       | N/A         | ✔      | PoW-only           |
 | `eth_submitWork`                                                                  | Eth       | N/A         | ✔      | PoW-only           |
 | `eth_submitHashrate`                                                              | Eth       |             |        |                    |
@@ -69,6 +69,13 @@ The examples also do not include the URL/IP & port combination which must be the
 | `eth_getUncleByBlockHashAndIndex`                                                 | Eth       | N/A         |        | PoW-only           |
 | `eth_getUncleByBlockNumberAndIndex`                                               | Eth       | N/A         |        | PoW-only           |
 | [`eth_getProof`](#eth_getProof)                                                   | Eth       | ✔           |        |                    |
+| [`eth_feeHistory`](#eth_feehistory)                                               | Eth       | ✔           | ✔      | EIP-1559           |
+| [`eth_maxPriorityFeePerGas`](#eth_maxpriorityfeepergas)                          | Eth       | ✔           | ✔      | EIP-1559           |
+| [`eth_chainId`](#eth_chainid)                                                     | Eth       | ✔           | ✔      |                    |
+| [`eth_getBlockReceipts`](#eth_getblockreceipts)                                   | Eth       | ✔           | ✔      |                    |
+| [`eth_resend`](#eth_resend)                                                       | Eth       | ✔           | ✔      |                    |
+| [`eth_pendingTransactions`](#eth_pendingtransactions)                             | Eth       | ✔           | ✔      |                    |
+| `eth_createAccessList`                                                            | Eth       |             | ✔      | EIP-2930           |
 | [`eth_subscribe`](#eth_subscribe)                                                 | Websocket | ✔           |        |                    |
 | [`eth_unsubscribe`](#eth_unsubscribe)                                             | Websocket | ✔           |        |                    |
 | [`personal_importRawKey`](#personal-importrawkey)                                 | Personal  | ✔           | ❌      |                    |
@@ -137,6 +144,7 @@ The examples also do not include the URL/IP & port combination which must be the
 | `debug_standardTraceBlockToFile`                                                  | Debug     |             |        |                    |
 | `debug_standardTraceBadBlockToFile`                                               | Debug     |             |        |                    |
 | [`debug_traceTransaction`](#debug-tracetransaction)                                                          | Debug     | ✔           |        |                    |
+| [`debug_traceCall`](#debug-tracecall)                                             | Debug     | ✔           |        |                    |
 | `debug_verbosity`                                                                 | Debug     |             |        |                    |
 | `debug_vmodule`                                                                   | Debug     |             |        |                    |
 | `debug_writeBlockProfile`                                                         | Debug     | ✔           |        |                    |
@@ -161,6 +169,7 @@ The examples also do not include the URL/IP & port combination which must be the
 | [`txpool_content`](#txpool-content)                                               | TxPool    | ✔           |        |                    |
 | [`txpool_inspect`](#txpool-inspect)                                               | TxPool    | ✔           |        |                    |
 | [`txpool_status`](#txpool-status)                                                 | TxPool    | ✔           |        |                    |
+| [`trace_callMany`](#trace-callmany)                                               | Trace     | ✔           |        |                    |
 
 :::tip
 Block Number can be entered as a Hex string, `"earliest"`, ``"latest"`` or `"pending"`.
