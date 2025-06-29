@@ -659,8 +659,8 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockHashAnd
 
 Returns the receipt of a transaction by transaction hash.
 
-Note: Tx Code from Tendermint and the Ethereum receipt status are switched:
-|         | Tendermint | Ethereum |
+Note: Tx Code from CometBFT and the Ethereum receipt status are switched:
+|         | CometBFT   | Ethereum |
 |---------|------------|----------|
 | Success | 0          | 1        |
 | Fail    | 1          | 0        |
