@@ -220,13 +220,17 @@ const config = {
                 to: 'https://blog.cosmos.network/',
               },
               {
-                label: 'Cosmos GitHub',
-                href: 'https://github.com/Cosmos',
+                label: 'GitHub',
+                href: 'https://github.com/cosmos/evm',
+              },
+              {
+                label: 'Contact',
+                href: 'https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca',
               },
             ],
           },
         ],
-        copyright: `Cosmos EVM is a fork of evmOS, maintained by Interchain Labs. © ${new Date().getFullYear()} All rights reserved.`,
+        copyright: `Cosmos EVM is a fork of evmOS, maintained by Interchain Labs.  ${new Date().getFullYear()} All rights reserved.`,
       },
       prism: {
         theme: lightCodeTheme,
