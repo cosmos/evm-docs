@@ -45,7 +45,7 @@ replace (
 ## Step 2: Update Chain Configuration
 
 **Important Note:** Cosmos EVM requires two separate chain-ids:
-- Cosmos chain-id [string], used for interactions through the Tendermint RPC.
+- Cosmos chain-id [string], used for interactions through the CometBFT RPC.
 - EVM chain-id [int], to ensure compatibility with standard EVM tooling.
 
 **Changes:**
@@ -255,9 +255,11 @@ func setBaseDenom(ci evmtypes.EvmCoinInfo) error {
 }
 ```
 
-## Step 5: Create Token Pair Configuration
+## Step 5: Create Token Pair Configuration (Optional)
 
-Create a new file `app/token_pair.go` with the following content. This is used as a mock token pair the DefaultGenesis function for testing and for spinning up a local chain:
+**Note:** This step may be skipped if you don't plan to have wrapped versions of your native token.
+
+Create a new file `app/token_pair.go` with the following content. This is used as a mock token pair for the DefaultGenesis function for testing and for spinning up a local chain:
 ```go
 package app
 
@@ -279,6 +281,8 @@ var ExampleTokenPairs = []erc20types.TokenPair{
 ```
 
 ## Step 6: Create Precompiles Configuration
+
+**Note:** Some precompiles like evidence and slashing may not be needed for all chains. Adjust the list based on your requirements.
 
 Create a file `app/precompiles.go`:
 ```go
@@ -406,6 +410,11 @@ func NewAvailableStaticPrecompiles(
 
 ## Step 7: Update app.go wiring to Include EVM Modules
 
+**Important Notes:**
+- If using skip-mev/feemarket, it needs to be removed in favor of the EVM feemarket module
+- The tracer imports (js/native) are required for EVM tracing functionality
+- Ensure proper ordering in BeginBlockers and InitGenesis for the EVM modules
+
 Modify your `app/app.go` file to:
 
 1. Add EVM imports:
@@ -479,6 +488,9 @@ func NewChainApp(
 ```
 
 5. Replace standard SDK encoding with `evmencoding.MakeConfig()`.
+
+**Note:** This changes how the encoding is initialized. If your chain has custom encoding requirements, you may need to adapt this approach.
+
 ```go
 // Replace existing encoding setup with:
 encodingConfig := evmencoding.MakeConfig()
@@ -602,6 +614,16 @@ app.TransferKeeper = ibctransferkeeper.NewKeeper(
     app.Erc20Keeper,  // Add this
     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 )
+```
+
+**Important:** After initializing the TransferKeeper, you must wire the ERC20 callbacks:
+
+```go
+// Wire IBC callbacks for ERC20
+transferModule := transfer.NewIBCModule(app.TransferKeeper)
+app.Erc20Keeper = *app.Erc20Keeper.SetTransferKeeper(app.TransferKeeper).
+    SetDynamicFeeExtensionKeeper(app.FeeMarketKeeper).
+    SetICS20Keeper(transferModule)
 ```
 
 10. Add EVM modules to app modules:
@@ -1077,6 +1099,8 @@ func initRootCmd(
 
 ## Step 11: Update root.go to Use EVM-Compatible Keyring and Coin Type
 
+**Important:** The EVM chain ID needs to be properly initialized in your root.go. See the [Cosmos EVM reference implementation](https://github.com/cosmos/evm/blob/0e511d32206b1ac709a0eb0ddb1aa21d29e833b8/cmd/evmd/cmd/root.go#L136-L157) for details on chain ID initialization.
+
 Update `cmd/evmd/root.go`:
 ```go
 import (
@@ -1105,7 +1129,15 @@ func NewRootCmd() *cobra.Command {
 }
 ```
 
-## Step 12: Final Checks and Running Your Local Chain
+## Step 12: Understanding Chain ID Usage
+
+**When to use which chain ID:**
+- **Cosmos Chain ID** (string): Used for CometBFT RPC, IBC relayers, and Cosmos SDK operations
+- **EVM Chain ID** (integer): Used for EVM transactions, MetaMask connections, and Ethereum tooling
+
+**Important:** Even with Eureka, Cosmos chains should still use Cosmos IBC, not Solidity IBC. The separation allows chains to maintain their Cosmos identity while being EVM-compatible.
+
+## Step 13: Final Checks and Running Your Local Chain
 
 Refer to the following script for an example for how to set up a local testnet: https://github.com/cosmos/evm/blob/main/local_node.sh
 
