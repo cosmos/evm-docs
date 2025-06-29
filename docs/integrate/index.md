@@ -5,7 +5,7 @@ sidebar_position: 0
 # Converting a Cosmos SDK Chain to an EVM Chain: Step-by-Step Guide
 
 :::note
-These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate repositories. **If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out [here](https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca)**.
+These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate repositories. If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out [here](https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca).
 :::
 
 This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your existing Cosmos SDK blockchain. Big thanks to Reece & the [Spawn](https://github.com/rollchains/spawn) team for their valuable contributions to this page.
@@ -13,9 +13,9 @@ This guide provides detailed steps to convert a standard Cosmos SDK chain into a
 This guide is specifically designed for chains that haven't launched yet. If you're building a new Cosmos SDK chain and want to include EVM compatibility from the start, these instructions will walk you through the process step by step.
 
 ⚠️ For chains that are already live, adding EVM compatibility is more complex and involves significant considerations:
-- **Account System Changes:** The conversion impacts the existing account system, potentially requiring address migration or mapping between Cosmos and Ethereum address formats.
-- **Tokenonomics:** Changes to token decimal places (from Cosmos standard 6 to Ethereum standard 18) impacts all existing balances and tokenomics.
-- **Asset Migration:** Existing assets need to be initialized and mirrored in the EVM.
+- Account system changes that may require address migration or mapping between Cosmos and Ethereum address formats
+- Token decimal changes (from Cosmos standard 6 to Ethereum standard 18) that impact all existing balances and tokenomics
+- Asset migration where existing assets need to be initialized and mirrored in the EVM
 
 Detailed instructions for upgrading existing chains are still in development and will be provided in a future guide.
 
@@ -52,45 +52,51 @@ replace (
 
 ## Step 2: Update Chain Configuration
 
-**Important Note:** Cosmos EVM requires two separate chain-ids:
-- Cosmos chain-id [string], used for interactions through the CometBFT RPC.
-- EVM chain-id [int], to ensure compatibility with standard EVM tooling.
+Cosmos EVM requires two separate chain-ids:
+- Cosmos chain-id (string) - used for interactions through the CometBFT RPC
+- EVM chain-id (integer) - ensures compatibility with standard EVM tooling
 
-**Changes:**
+### Chain ID Configuration
 
-1.  **Chain ID Configuration:** Configure both Cosmos and EVM chain IDs separately.
-    *   **Cosmos Chain ID:** Can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
-    *   **EVM Chain ID:** Must be an integer following EIP-155 (e.g., `9000`)
-    *   **Configuration:** The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
-    *   **Example Config:**
+Configure both Cosmos and EVM chain IDs separately:
+- Cosmos Chain ID can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
+- EVM Chain ID must be an integer following EIP-155 (e.g., `9000`)
+- The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
+
+Example configuration:
         ```go
         // In your app configuration
         const CosmosChainID = "mychain-1"  // Standard Cosmos format
         const EVMChainID = 9000             // EIP-155 integer
         ```
-    *   **Locations to Update:**
-        *   `app/app.go`: Set your Cosmos chain ID constant
-        *   `app/config.go`: Configure EVM chain ID in the EVM options
-        *   `Makefile`: Use standard Cosmos chain ID
-        *   `scripts/*.sh`: Update `CHAIN_ID` variables with Cosmos chain ID
-        *   `genesis.json`: Configure both chain IDs appropriately
+Files to update:
+- `app/app.go` - Set your Cosmos chain ID constant
+- `app/config.go` - Configure EVM chain ID in the EVM options
+- `Makefile` - Use standard Cosmos chain ID
+- `scripts/*.sh` - Update `CHAIN_ID` variables with Cosmos chain ID
+- `genesis.json` - Configure both chain IDs appropriately
 
-2.  **Account Configuration:** Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility.
-    *   **Key Algorithm:** Defaults to `eth_secp256k1` (previously `secp256k1`)
-    *   **Coin Type (SLIP-0044):** Change from `118` (Cosmos default) to `60` (Ethereum standard)
-    *   **Note:** The coin type can be changed during a chain upgrade if needed, rather than being permanently hardcoded.
-    *   **Locations & Examples:**
-        *   `app/app.go`: `const CoinType uint32 = 60`
-        *   `chain_registry.json`: `"slip44": 60`
-        *   `chains/*.json`: `"coin_type": 60`
-        *   `interchaintest/*`: Update coin type constants/variables.
+### Account Configuration
 
-3.  **Base Denomination Units (Optional but Recommended):** While it's optional to change from `6` decimals (Cosmos convention) to `18` decimals (EVM/Ethereum standard), it is highly recommended for better EVM compatibility.
-    *   **Note:** This change impacts how token amounts are represented and requires updating the SDK Power Reduction factor.
-    *   **If you choose to use 18 decimals:**
-        *   `app/app.go`: `const BaseDenomUnit int64 = 18`
-        *   `chain_registry_assets.json`:
-            ```json
+Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility:
+- Key algorithm defaults to `eth_secp256k1` (previously `secp256k1`)
+- Coin type (SLIP-0044) changes from `118` (Cosmos default) to `60` (Ethereum standard)
+- The coin type can be changed during a chain upgrade if needed
+
+Files to update:
+- `app/app.go`: `const CoinType uint32 = 60`
+- `chain_registry.json`: `"slip44": 60`
+- `chains/*.json`: `"coin_type": 60`
+- `interchaintest/*`: Update coin type constants/variables
+
+### Base Denomination Units
+
+While optional, changing from 6 decimals (Cosmos convention) to 18 decimals (EVM/Ethereum standard) is highly recommended for better EVM compatibility. This change impacts how token amounts are represented and requires updating the SDK Power Reduction factor.
+
+If you choose to use 18 decimals:
+- `app/app.go`: `const BaseDenomUnit int64 = 18`
+- `chain_registry_assets.json`:
+```json
             {
               // ...
               "denom_units": [
@@ -104,8 +110,9 @@ replace (
             }
             ```
 
-4.  **SDK Power Reduction (Only if using 18 decimals):** If you changed to 18 decimals, update the power reduction factor to match.
-    *   **Location:** Add an `init()` function in `app/app.go`:
+### SDK Power Reduction
+
+If you changed to 18 decimals, update the power reduction factor to match. Add an `init()` function in `app/app.go`:
         ```go
         import (
             "math/big"
@@ -126,7 +133,7 @@ replace (
 
 ## Step 3: Configure Automatic ERC20 Token Registration for IBC Tokens
 
-**Important:** This enabled automatic registration of ERC20 extensions for single-hop IBC tokens (those with "ibc/" prefix) when they are received.
+This enables automatic registration of ERC20 extensions for single-hop IBC tokens (those with "ibc/" prefix) when they are received.
 
 ### How It Works
 
@@ -140,7 +147,7 @@ The Cosmos EVM x/erc20 module automatically registers ERC20 token pairs for inco
 
 To enable this functionality, ensure the following in your chain setup:
 
-1. **Use the Extended Transfer Module** (shown in Step 7):
+1. Use the Extended Transfer Module (shown in Step 7):
 ```go
 // Import the extended transfer module
 import transfer "github.com/cosmos/evm/x/ibc/transfer"
@@ -154,7 +161,7 @@ app.TransferKeeper = ibctransferkeeper.NewKeeper(
 )
 ```
 
-2. **Enable ERC20 Module Parameters**:
+2. Enable ERC20 Module Parameters:
 ```go
 // In your genesis configuration
 erc20Params := erc20types.DefaultParams()
@@ -162,7 +169,7 @@ erc20Params.EnableErc20 = true
 erc20Params.EnableEVMHook = true
 ```
 
-3. **Ensure Proper Module Wiring**: The modules must be wired correctly in your app.go as shown in the subsequent steps.
+3. Ensure proper module wiring in your app.go as shown in the subsequent steps.
 
 This built-in functionality eliminates the need to manually register each new IBC token, providing a seamless user experience.
 
@@ -267,7 +274,7 @@ func setBaseDenom(ci evmtypes.EvmCoinInfo) error {
 
 ## Step 5: Create Token Pair Configuration (Optional)
 
-**Note:** This step may be skipped if you don't plan to have wrapped versions of your native token.
+This step may be skipped if you don't plan to have wrapped versions of your native token.
 
 Create a new file `app/token_pair.go` with the following content. This is used as a mock token pair for the DefaultGenesis function for testing and for spinning up a local chain:
 ```go
@@ -292,7 +299,7 @@ var ExampleTokenPairs = []erc20types.TokenPair{
 
 ## Step 6: Create Precompiles Configuration
 
-**Note:** Some precompiles like evidence and slashing may not be needed for all chains. Adjust the list based on your requirements.
+Some precompiles like evidence and slashing may not be needed for all chains. Adjust the list based on your requirements.
 
 Create a file `app/precompiles.go`:
 ```go
@@ -418,7 +425,9 @@ func NewAvailableStaticPrecompiles(
 }
 ```
 
-**Important Note on Blocked Addresses:** When adding new hardforks to your EVM chain, you must update the list of blocked addresses to include any new precompile addresses introduced by that hardfork. Failing to do so can result in security vulnerabilities where users could send funds to precompile addresses that would become unrecoverable.
+### Blocked Addresses for Hardforks
+
+When adding new hardforks to your EVM chain, you must update the list of blocked addresses to include any new precompile addresses introduced by that hardfork. Failing to do so can result in security vulnerabilities where users could send funds to precompile addresses that would become unrecoverable.
 
 For example, when enabling a hardfork that introduces new precompiles:
 ```go
@@ -438,7 +447,7 @@ func (app *ChainApp) BlockedModuleAccountAddrs() map[string]bool {
 
 ## Step 7: Update app.go wiring to Include EVM Modules
 
-**Important Notes:**
+Key considerations:
 - If using skip-mev/feemarket, it needs to be removed in favor of the EVM feemarket module
 - The tracer imports (js/native) are required for EVM tracing functionality
 - Ensure proper ordering in BeginBlockers and InitGenesis for the EVM modules
@@ -517,7 +526,7 @@ func NewChainApp(
 
 5. Replace standard SDK encoding with `evmencoding.MakeConfig()`.
 
-**Note:** This changes how the encoding is initialized. If your chain has custom encoding requirements, you may need to adapt this approach.
+This changes how the encoding is initialized. If your chain has custom encoding requirements, you may need to adapt this approach.
 
 ```go
 // Replace existing encoding setup with:
@@ -644,7 +653,7 @@ app.TransferKeeper = ibctransferkeeper.NewKeeper(
 )
 ```
 
-**Important:** After initializing the TransferKeeper, you must wire the ERC20 callbacks for automatic ERC20 token registration when IBC tokens are transferred:
+After initializing the TransferKeeper, you must wire the ERC20 callbacks for automatic ERC20 token registration when IBC tokens are transferred:
 
 ```go
 // Wire IBC callbacks for ERC20 automatic token registration
@@ -662,7 +671,7 @@ app.Erc20Keeper = *app.Erc20Keeper.SetTransferKeeper(app.TransferKeeper).
 // The order matters because the ERC20 keeper needs a reference to the IBC module
 ```
 
-**Note:** This wiring is essential for the automatic ERC20 registration feature. Without it, IBC tokens transferred to your chain won't automatically have corresponding ERC20 contracts deployed.
+This wiring is essential for the automatic ERC20 registration feature. Without it, IBC tokens transferred to your chain won't automatically have corresponding ERC20 contracts deployed.
 
 10. Add EVM modules to app modules:
 ```go
@@ -798,9 +807,9 @@ func (app *ChainApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 
 Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all relevant files.
 
-**`NewChainApp` Callsites:** Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/evmd/commands.go`, `cmd/evmd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
+`NewChainApp` Callsites: Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/evmd/commands.go`, `cmd/evmd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
 
-*   **Example (`app/test_helpers.go`):**
+*   Example (`app/test_helpers.go`):
     ```go
     func setup(
         // ...
@@ -813,7 +822,7 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
         )
     }
     ```
-*   **Example (`cmd/evmd/commands.go`):**
+*   Example (`cmd/evmd/commands.go`):
     ```go
     func newApp( /* ... */ ) servertypes.Application {
         // ...
@@ -1137,7 +1146,7 @@ func initRootCmd(
 
 ## Step 11: Disable Sign Mode Textual
 
-**Important Note:** Sign mode textual must be disabled when using EVM compatibility as it's incompatible with the ethereum signing methods. Add the following to your application configuration:
+Note: Sign mode textual must be disabled when using EVM compatibility as it's incompatible with the ethereum signing methods. Add the following to your application configuration:
 
 ```go
 // In your app initialization, disable sign mode textual
@@ -1188,11 +1197,11 @@ func NewRootCmd() *cobra.Command {
 
 ## Step 12: Understanding Chain ID Usage
 
-**When to use which chain ID:**
-- **Cosmos Chain ID** (string): Used for CometBFT RPC, IBC relayers, and Cosmos SDK operations
-- **EVM Chain ID** (integer): Used for EVM transactions, MetaMask connections, and Ethereum tooling
+When to use which chain ID:
+- Cosmos Chain ID (string): Used for CometBFT RPC, IBC relayers, and Cosmos SDK operations
+- EVM Chain ID (integer): Used for EVM transactions, MetaMask connections, and Ethereum tooling
 
-**Important:** Even with Eureka, Cosmos chains should still use Cosmos IBC, not Solidity IBC. The separation allows chains to maintain their Cosmos identity while being EVM-compatible.
+Note: Even with Eureka, Cosmos chains should still use Cosmos IBC, not Solidity IBC. The separation allows chains to maintain their Cosmos identity while being EVM-compatible.
 
 ## Step 13: Final Checks and Running Your Local Chain
 
@@ -1218,7 +1227,7 @@ When using development tools like Foundry and Hardhat with your Cosmos EVM chain
 
 ### Fork Feature Limitations
 
-**Important:** Any functions that require the 'fork' feature (such as forking mainnet Ethereum or other chains) are not supported in Cosmos EVM. This is because Cosmos EVM chains have their own state model and cannot directly fork external EVM chains.
+Note: Any functions that require the 'fork' feature (such as forking mainnet Ethereum or other chains) are not supported in Cosmos EVM. This is because Cosmos EVM chains have their own state model and cannot directly fork external EVM chains.
 
 Features that won't work:
 - `--fork-url` in Foundry
@@ -1229,14 +1238,14 @@ Features that won't work:
 
 For testing precompiled contracts and their interactions, we recommend using the Etch tool. Etch allows you to write and test precompile interactions in a browser-based environment.
 
-**Access Etch:** Visit [etch.html](./etch.html) to use the Etch testing environment.
+Access Etch: Visit [etch.html](./etch.html) to use the Etch testing environment.
 
 ### Recommended Approach
 
-1. **Local Development:** Deploy and test your contracts on a local Cosmos EVM node
-2. **Precompile Testing:** Use Etch for testing precompile interactions
-3. **Integration Testing:** Test against a running Cosmos EVM testnet
-4. **Unit Testing:** Standard Solidity unit tests work normally
+1. Local Development: Deploy and test your contracts on a local Cosmos EVM node
+2. Precompile Testing: Use Etch for testing precompile interactions
+3. Integration Testing: Test against a running Cosmos EVM testnet
+4. Unit Testing: Standard Solidity unit tests work normally
 
 Example Foundry configuration for Cosmos EVM:
 ```toml
