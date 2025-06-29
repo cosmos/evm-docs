@@ -1,11 +1,12 @@
 ---
 sidebar_position: 0
+displayed_sidebar: null
 ---
 
 # Converting a Cosmos SDK Chain to an EVM Chain: Step-by-Step Guide
 
 :::note
-These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate repositories. If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out [here](https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca).
+These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate repositories. If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out through [this form](https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca).
 :::
 
 This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your existing Cosmos SDK blockchain. Big thanks to Reece & the [Spawn](https://github.com/rollchains/spawn) team for their valuable contributions to this page.
@@ -13,6 +14,7 @@ This guide provides detailed steps to convert a standard Cosmos SDK chain into a
 This guide is specifically designed for chains that haven't launched yet. If you're building a new Cosmos SDK chain and want to include EVM compatibility from the start, these instructions will walk you through the process step by step.
 
 ⚠️ For chains that are already live, adding EVM compatibility is more complex and involves significant considerations:
+
 - Account system changes that may require address migration or mapping between Cosmos and Ethereum address formats
 - Token decimal changes (from Cosmos standard 6 to Ethereum standard 18) that impact all existing balances and tokenomics
 - Asset migration where existing assets need to be initialized and mirrored in the EVM
@@ -28,20 +30,20 @@ Detailed instructions for upgrading existing chains are still in development and
 
 ## Step 1: Update Dependencies in go.mod
 
-```
+```sh
 // import modules
 require (
     github.com/cosmos/cosmos-sdk v0.50.13
-	github.com/ethereum/go-ethereum v1.10.26
-	
-	// for ibc functionality in EVM
+ github.com/ethereum/go-ethereum v1.10.26
+
+ // for ibc functionality in EVM
     github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1
-	github.com/cosmos/ibc-go/modules/capability v1.0.1
-	github.com/cosmos/ibc-go/v8 v8.7.0
+ github.com/cosmos/ibc-go/modules/capability v1.0.1
+ github.com/cosmos/ibc-go/v8 v8.7.0
 )
 ```
 
-```
+```sh
 // Add module replacements
 replace (
     cosmossdk.io/store => github.com/cosmos/cosmos-sdk/store v1.1.2-0.20250319183239-53dea340efc7
@@ -53,15 +55,23 @@ replace (
 ## Step 2: Update Chain Configuration
 
 Cosmos EVM requires two separate chain-ids:
+
 - Cosmos chain-id (string) - used for interactions through the CometBFT RPC
 - EVM chain-id (integer) - ensures compatibility with standard EVM tooling
 
 ### Chain ID Configuration
 
 Configure both Cosmos and EVM chain IDs separately:
+
 - Cosmos Chain ID can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
 - EVM Chain ID must be an integer following EIP-155 (e.g., `9000`)
 - The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
+
+
+:::note
+Make sure to confirm your chain-id is not already taken by referring
+to [ethereum-lists](https://github.com/ethereum-lists).
+:::
 
 Example configuration:
         ```go
@@ -70,6 +80,7 @@ Example configuration:
         const EVMChainID = 9000             // EIP-155 integer
         ```
 Files to update:
+
 - `app/app.go` - Set your Cosmos chain ID constant
 - `app/config.go` - Configure EVM chain ID in the EVM options
 - `Makefile` - Use standard Cosmos chain ID
@@ -79,11 +90,13 @@ Files to update:
 ### Account Configuration
 
 Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility:
+
 - Key algorithm defaults to `eth_secp256k1` (previously `secp256k1`)
 - Coin type (SLIP-0044) changes from `118` (Cosmos default) to `60` (Ethereum standard)
 - The coin type can be changed during a chain upgrade if needed
 
 Files to update:
+
 - `app/app.go`: `const CoinType uint32 = 60`
 - `chain_registry.json`: `"slip44": 60`
 - `chains/*.json`: `"coin_type": 60`
@@ -94,8 +107,10 @@ Files to update:
 While optional, changing from 6 decimals (Cosmos convention) to 18 decimals (EVM/Ethereum standard) is highly recommended for better EVM compatibility. This change impacts how token amounts are represented and requires updating the SDK Power Reduction factor.
 
 If you choose to use 18 decimals:
+
 - `app/app.go`: `const BaseDenomUnit int64 = 18`
 - `chain_registry_assets.json`:
+
 ```json
             {
               // ...
@@ -162,6 +177,7 @@ app.TransferKeeper = ibctransferkeeper.NewKeeper(
 ```
 
 2. Enable ERC20 Module Parameters:
+
 ```go
 // In your genesis configuration
 erc20Params := erc20types.DefaultParams()
@@ -173,20 +189,168 @@ erc20Params.EnableEVMHook = true
 
 This built-in functionality eliminates the need to manually register each new IBC token, providing a seamless user experience.
 
-## Step 4: Create EVM Configuration File
+## Step 4: Configure IBC and Relayer Support
+
+### Eureka and IBC Module Selection
+
+When integrating Cosmos EVM with the upcoming Eureka upgrade, it's crucial to understand that Cosmos SDK chains should continue using the native Cosmos IBC module, not the Solidity IBC implementation. This architectural decision allows chains to:
+
+- Maintain full compatibility with the existing Cosmos ecosystem
+- Leverage battle-tested IBC infrastructure
+- Keep their Cosmos chain identity while adding EVM capabilities
+- Benefit from native IBC performance and security
+
+### Understanding IBCv2 Architecture
+
+IBCv2 represents a significant simplification of the IBC protocol that will affect how relayers operate:
+
+- No more channels or connections: IBCv2 eliminates the concept of channels and connections
+- Direct client-to-client communication: Only a pair of clients (one on each chain) is needed
+- Simplified relayer operations: Relayers no longer need to manage connection and channel handshakes
+- Backwards compatibility: Existing IBC functionality is preserved while reducing complexity
+
+### Setting Up Hermes Relayer
+
+Hermes is the recommended relayer for Cosmos chains. Here's how to configure it for your Cosmos EVM chain:
+
+#### Basic Configuration Structure
+
+Create a `config.toml` file for Hermes with the following structure:
+
+```toml
+[global]
+log_level = 'info'
+
+[mode.clients]
+enabled = true
+refresh = true
+misbehaviour = false
+
+[mode.connections]
+enabled = true
+
+[mode.channels]
+enabled = true
+
+[mode.packets]
+enabled = true
+clear_interval = 100
+clear_on_start = true
+tx_confirmation = false
+
+[telemetry]
+enabled = true
+host = '127.0.0.1'
+port = 3001
+
+[[chains]]
+id = 'cosmosevm-1'  # Your Cosmos chain ID (not EVM chain ID)
+type = 'CosmosSdk'
+rpc_addr = 'http://127.0.0.1:26657'
+grpc_addr = 'http://127.0.0.1:9090'
+rpc_timeout = '10s'
+account_prefix = 'cosmos'  # Or your custom prefix
+key_name = 'relayer'
+key_store_type = 'Test'
+store_prefix = 'ibc'
+default_gas = 100000
+max_gas = 3000000
+gas_price = { price = 0.025, denom = 'stake' }  # Your base denom
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
+clock_drift = '5s'
+max_block_time = '30s'
+trusting_period = '14days'
+trust_threshold = { numerator = '1', denominator = '3' }
+memo_prefix = ''
+sequential_batch_tx = false
+
+[[chains]]
+# Configuration for the second chain
+id = 'cosmoshub-4'
+# ... (similar configuration)
+```
+
+#### Key Configuration Points
+
+1. Chain ID: Use your Cosmos chain ID (string format like "cosmosevm-1"), not the EVM chain ID
+2. Account Prefix: Ensure this matches your chain's bech32 prefix
+3. Gas Settings: Adjust based on your chain's gas requirements
+4. RPC/gRPC Endpoints: Point to your chain's CometBFT RPC and Cosmos SDK gRPC endpoints
+
+#### Starting the Relayer
+
+1. Install Hermes:
+```bash
+cargo install ibc-relayer-cli --version 1.7.0
+```
+
+2. Add your relayer keys:
+```bash
+hermes keys add --chain cosmosevm-1 --mnemonic-file <seed-file>
+```
+
+3. Create clients, connections, and channels:
+```bash
+# For IBCv1 (current)
+hermes create channel --a-chain cosmosevm-1 --b-chain cosmoshub-4 --a-port transfer --b-port transfer --new-client-connection
+
+# For IBCv2 (future) - only clients needed
+hermes create client --host-chain cosmosevm-1 --reference-chain cosmoshub-4
+hermes create client --host-chain cosmoshub-4 --reference-chain cosmosevm-1
+```
+
+4. Start relaying:
+```bash
+hermes start
+```
+
+### Testing IBC Transfers
+
+Once your relayer is running, test IBC transfers to verify the automatic ERC20 registration:
+
+1. Send tokens from another chain to your Cosmos EVM chain:
+```bash
+# From source chain
+gaiad tx ibc-transfer transfer transfer channel-0 cosmos1... 1000uatom --from wallet
+```
+
+2. Verify the IBC token was received and ERC20 was auto-registered:
+```bash
+# Check balance on Cosmos EVM chain
+evmd query bank balances cosmos1...
+
+# Check if ERC20 token pair was created
+evmd query erc20 token-pairs
+```
+
+3. Interact with the auto-generated ERC20 contract through MetaMask or web3 tools.
+
+### Monitoring and Troubleshooting
+
+- Monitor relayer logs for packet relay status
+- Check chain logs for ERC20 registration events
+- Use Hermes health-check commands to verify connections
+- Ensure gas prices are sufficient for both chains
+
+For more detailed Hermes configuration and advanced features, refer to the [official Hermes documentation](https://hermes.informal.systems/).
+
+## Step 5: Create EVM Configuration File
 
 Create a new file `app/config.go` with the following content. Note that you'll need to define your EVM chain ID constant (e.g., `const EVMChainID = 9000`) in your app constants or config:
+
 ```go
 package app
 
 import (
-	"fmt"
-	"math/big"
-	"strings"
+ "fmt"
+ "math/big"
+ "strings"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
+ "cosmossdk.io/math"
+ sdk "github.com/cosmos/cosmos-sdk/types"
+ evmtypes "github.com/cosmos/evm/x/vm/types"
 )
 
 // EVMOptionsFn defines a function type for setting app options specifically for
@@ -197,7 +361,7 @@ type EVMOptionsFn func(string) error
 // NoOpEVMOptions is a no-op function that can be used when the app does not
 // need any specific configuration.
 func NoOpEVMOptions(_ string) error {
-	return nil
+ return nil
 }
 
 var sealed = false
@@ -205,78 +369,79 @@ var sealed = false
 // ChainsCoinInfo maps EVM chain IDs to their corresponding coin configuration
 // This allows different configurations based on the EVM chain ID
 var ChainsCoinInfo = map[uint64]evmtypes.EvmCoinInfo{
-	9000: { // Your EVM chain ID
-		Denom:        BaseDenom,
-		DisplayDenom: DisplayDenom,
-		Decimals:     evmtypes.EighteenDecimals,
-	},
+ 9000: { // Your EVM chain ID
+  Denom:        BaseDenom,
+  DisplayDenom: DisplayDenom,
+  Decimals:     evmtypes.EighteenDecimals,
+ },
 }
 
 // EVMAppOptions allows to setup the global configuration
 // for the chain.
 func EVMAppOptions(chainID string) error {
-	if sealed {
-		return nil
-	}
+ if sealed {
+  return nil
+ }
 
-	if chainID == "" {
-		chainID = ChainID
-	}
+ if chainID == "" {
+  chainID = ChainID
+ }
 
-	id := strings.Split(chainID, "-")[0]
-	coinInfo, found := ChainsCoinInfo[id]
-	if !found {
-		coinInfo, found = ChainsCoinInfo[chainID]
-		if !found {
-			return fmt.Errorf("unknown chain id: %s, %+v", chainID, ChainsCoinInfo)
-		}
-	}
+ id := strings.Split(chainID, "-")[0]
+ coinInfo, found := ChainsCoinInfo[id]
+ if !found {
+  coinInfo, found = ChainsCoinInfo[chainID]
+  if !found {
+   return fmt.Errorf("unknown chain id: %s, %+v", chainID, ChainsCoinInfo)
+  }
+ }
 
-	// set the denom info for the chain
-	if err := setBaseDenom(coinInfo); err != nil {
-		return err
-	}
+ // set the denom info for the chain
+ if err := setBaseDenom(coinInfo); err != nil {
+  return err
+ }
 
-	baseDenom, err := sdk.GetBaseDenom()
-	if err != nil {
-		return err
-	}
+ baseDenom, err := sdk.GetBaseDenom()
+ if err != nil {
+  return err
+ }
 
-	// Get the EVM chain configuration based on the chain ID
-	// The EVM chain ID should be configured in your chain's config
-	ethCfg := evmtypes.DefaultChainConfig(chainID)
+ // Get the EVM chain configuration based on the chain ID
+ // The EVM chain ID should be configured in your chain's config
+ ethCfg := evmtypes.DefaultChainConfig(chainID)
 
-	err = evmtypes.NewEVMConfigurator().
-		WithChainConfig(ethCfg).
-		// NOTE: we're using the 18 decimals
-		WithEVMCoinInfo(baseDenom, uint8(coinInfo.Decimals)).
-		Configure()
-	if err != nil {
-		return err
-	}
+ err = evmtypes.NewEVMConfigurator().
+  WithChainConfig(ethCfg).
+  // NOTE: we're using the 18 decimals
+  WithEVMCoinInfo(baseDenom, uint8(coinInfo.Decimals)).
+  Configure()
+ if err != nil {
+  return err
+ }
 
-	sealed = true
-	return nil
+ sealed = true
+ return nil
 }
 
 // setBaseDenom registers the display denom and base denom and sets the
 // base denom for the chain.
 func setBaseDenom(ci evmtypes.EvmCoinInfo) error {
-	if err := sdk.RegisterDenom(ci.DisplayDenom, math.LegacyOneDec()); err != nil {
-		return err
-	}
+ if err := sdk.RegisterDenom(ci.DisplayDenom, math.LegacyOneDec()); err != nil {
+  return err
+ }
 
-	// sdk.RegisterDenom will automatically overwrite the base denom when the
-	// new setBaseDenom() are lower than the current base denom's units.
-	return sdk.RegisterDenom(ci.Denom, math.LegacyNewDecWithPrec(1, int64(ci.Decimals)))
+ // sdk.RegisterDenom will automatically overwrite the base denom when the
+ // new setBaseDenom() are lower than the current base denom's units.
+ return sdk.RegisterDenom(ci.Denom, math.LegacyNewDecWithPrec(1, int64(ci.Decimals)))
 }
 ```
 
-## Step 5: Create Token Pair Configuration (Optional)
+## Step 6: Create Token Pair Configuration (Optional)
 
 This step may be skipped if you don't plan to have wrapped versions of your native token.
 
 Create a new file `app/token_pair.go` with the following content. This is used as a mock token pair for the DefaultGenesis function for testing and for spinning up a local chain:
+
 ```go
 package app
 
@@ -297,40 +462,41 @@ var ExampleTokenPairs = []erc20types.TokenPair{
 }
 ```
 
-## Step 6: Create Precompiles Configuration
+## Step 7: Create Precompiles Configuration
 
 Some precompiles like evidence and slashing may not be needed for all chains. Adjust the list based on your requirements.
 
 Create a file `app/precompiles.go`:
+
 ```go
 package app
 
 import (
-	"fmt"
-	"maps"
+ "fmt"
+ "maps"
 
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	bankprecompile "github.com/cosmos/evm/precompiles/bank"
-	"github.com/cosmos/evm/precompiles/bech32"
-	distprecompile "github.com/cosmos/evm/precompiles/distribution"
-	evidenceprecompile "github.com/cosmos/evm/precompiles/evidence"
-	govprecompile "github.com/cosmos/evm/precompiles/gov"
-	ics20precompile "github.com/cosmos/evm/precompiles/ics20"
-	"github.com/cosmos/evm/precompiles/p256"
-	slashingprecompile "github.com/cosmos/evm/precompiles/slashing"
-	stakingprecompile "github.com/cosmos/evm/precompiles/staking"
-	erc20Keeper "github.com/cosmos/evm/x/erc20/keeper"
-	transferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
-	"github.com/cosmos/evm/x/vm/core/vm"
-	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
-	"github.com/ethereum/go-ethereum/common"
+ evidencekeeper "cosmossdk.io/x/evidence/keeper"
+ authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+ bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+ distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+ govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+ slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+ stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+ bankprecompile "github.com/cosmos/evm/precompiles/bank"
+ "github.com/cosmos/evm/precompiles/bech32"
+ distprecompile "github.com/cosmos/evm/precompiles/distribution"
+ evidenceprecompile "github.com/cosmos/evm/precompiles/evidence"
+ govprecompile "github.com/cosmos/evm/precompiles/gov"
+ ics20precompile "github.com/cosmos/evm/precompiles/ics20"
+ "github.com/cosmos/evm/precompiles/p256"
+ slashingprecompile "github.com/cosmos/evm/precompiles/slashing"
+ stakingprecompile "github.com/cosmos/evm/precompiles/staking"
+ erc20Keeper "github.com/cosmos/evm/x/erc20/keeper"
+ transferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
+ "github.com/cosmos/evm/x/vm/core/vm"
+ evmkeeper "github.com/cosmos/evm/x/vm/keeper"
+ channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
+ "github.com/ethereum/go-ethereum/common"
 )
 
 const bech32PrecompileBaseGas = 6_000
@@ -339,89 +505,89 @@ const bech32PrecompileBaseGas = 6_000
 //
 // NOTE: this should only be used during initialization of the Keeper.
 func NewAvailableStaticPrecompiles(
-	stakingKeeper stakingkeeper.Keeper,
-	distributionKeeper distributionkeeper.Keeper,
-	bankKeeper bankkeeper.Keeper,
-	erc20Keeper erc20Keeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
-	transferKeeper transferkeeper.Keeper,
-	channelKeeper channelkeeper.Keeper,
-	evmKeeper *evmkeeper.Keeper,
-	govKeeper govkeeper.Keeper,
-	slashingKeeper slashingkeeper.Keeper,
-	evidenceKeeper evidencekeeper.Keeper,
+ stakingKeeper stakingkeeper.Keeper,
+ distributionKeeper distributionkeeper.Keeper,
+ bankKeeper bankkeeper.Keeper,
+ erc20Keeper erc20Keeper.Keeper,
+ authzKeeper authzkeeper.Keeper,
+ transferKeeper transferkeeper.Keeper,
+ channelKeeper channelkeeper.Keeper,
+ evmKeeper *evmkeeper.Keeper,
+ govKeeper govkeeper.Keeper,
+ slashingKeeper slashingkeeper.Keeper,
+ evidenceKeeper evidencekeeper.Keeper,
 ) map[common.Address]vm.PrecompiledContract {
-	// Clone the mapping from the latest EVM fork.
-	precompiles := maps.Clone(vm.PrecompiledContractsBerlin)
+ // Clone the mapping from the latest EVM fork.
+ precompiles := maps.Clone(vm.PrecompiledContractsBerlin)
 
-	// secp256r1 precompile as per EIP-7212
-	p256Precompile := &p256.Precompile{}
+ // secp256r1 precompile as per EIP-7212
+ p256Precompile := &p256.Precompile{}
 
-	bech32Precompile, err := bech32.NewPrecompile(bech32PrecompileBaseGas)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate bech32 precompile: %w", err))
-	}
+ bech32Precompile, err := bech32.NewPrecompile(bech32PrecompileBaseGas)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate bech32 precompile: %w", err))
+ }
 
-	stakingPrecompile, err := stakingprecompile.NewPrecompile(stakingKeeper, authzKeeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate staking precompile: %w", err))
-	}
+ stakingPrecompile, err := stakingprecompile.NewPrecompile(stakingKeeper, authzKeeper)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate staking precompile: %w", err))
+ }
 
-	distributionPrecompile, err := distprecompile.NewPrecompile(
-		distributionKeeper,
-		stakingKeeper,
-		authzKeeper,
-		evmKeeper,
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate distribution precompile: %w", err))
-	}
+ distributionPrecompile, err := distprecompile.NewPrecompile(
+  distributionKeeper,
+  stakingKeeper,
+  authzKeeper,
+  evmKeeper,
+ )
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate distribution precompile: %w", err))
+ }
 
-	ibcTransferPrecompile, err := ics20precompile.NewPrecompile(
-		stakingKeeper,
-		transferKeeper,
-		channelKeeper,
-		authzKeeper,
-		evmKeeper,
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate ICS20 precompile: %w", err))
-	}
+ ibcTransferPrecompile, err := ics20precompile.NewPrecompile(
+  stakingKeeper,
+  transferKeeper,
+  channelKeeper,
+  authzKeeper,
+  evmKeeper,
+ )
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate ICS20 precompile: %w", err))
+ }
 
-	bankPrecompile, err := bankprecompile.NewPrecompile(bankKeeper, erc20Keeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate bank precompile: %w", err))
-	}
+ bankPrecompile, err := bankprecompile.NewPrecompile(bankKeeper, erc20Keeper)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate bank precompile: %w", err))
+ }
 
-	govPrecompile, err := govprecompile.NewPrecompile(govKeeper, authzKeeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate gov precompile: %w", err))
-	}
+ govPrecompile, err := govprecompile.NewPrecompile(govKeeper, authzKeeper)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate gov precompile: %w", err))
+ }
 
-	slashingPrecompile, err := slashingprecompile.NewPrecompile(slashingKeeper, authzKeeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate slashing precompile: %w", err))
-	}
+ slashingPrecompile, err := slashingprecompile.NewPrecompile(slashingKeeper, authzKeeper)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate slashing precompile: %w", err))
+ }
 
-	evidencePrecompile, err := evidenceprecompile.NewPrecompile(evidenceKeeper, authzKeeper)
-	if err != nil {
-		panic(fmt.Errorf("failed to instantiate evidence precompile: %w", err))
-	}
+ evidencePrecompile, err := evidenceprecompile.NewPrecompile(evidenceKeeper, authzKeeper)
+ if err != nil {
+  panic(fmt.Errorf("failed to instantiate evidence precompile: %w", err))
+ }
 
-	// Stateless precompiles
-	precompiles[bech32Precompile.Address()] = bech32Precompile
-	precompiles[p256Precompile.Address()] = p256Precompile
+ // Stateless precompiles
+ precompiles[bech32Precompile.Address()] = bech32Precompile
+ precompiles[p256Precompile.Address()] = p256Precompile
 
-	// Stateful precompiles
-	precompiles[stakingPrecompile.Address()] = stakingPrecompile
-	precompiles[distributionPrecompile.Address()] = distributionPrecompile
-	precompiles[ibcTransferPrecompile.Address()] = ibcTransferPrecompile
-	precompiles[bankPrecompile.Address()] = bankPrecompile
-	precompiles[govPrecompile.Address()] = govPrecompile
-	precompiles[slashingPrecompile.Address()] = slashingPrecompile
-	precompiles[evidencePrecompile.Address()] = evidencePrecompile
+ // Stateful precompiles
+ precompiles[stakingPrecompile.Address()] = stakingPrecompile
+ precompiles[distributionPrecompile.Address()] = distributionPrecompile
+ precompiles[ibcTransferPrecompile.Address()] = ibcTransferPrecompile
+ precompiles[bankPrecompile.Address()] = bankPrecompile
+ precompiles[govPrecompile.Address()] = govPrecompile
+ precompiles[slashingPrecompile.Address()] = slashingPrecompile
+ precompiles[evidencePrecompile.Address()] = evidencePrecompile
 
-	return precompiles
+ return precompiles
 }
 ```
 
@@ -430,24 +596,26 @@ func NewAvailableStaticPrecompiles(
 When adding new hardforks to your EVM chain, you must update the list of blocked addresses to include any new precompile addresses introduced by that hardfork. Failing to do so can result in security vulnerabilities where users could send funds to precompile addresses that would become unrecoverable.
 
 For example, when enabling a hardfork that introduces new precompiles:
+
 ```go
 // In your app.go, update the blocked addresses list
 func (app *ChainApp) BlockedModuleAccountAddrs() map[string]bool {
     modAccAddrs := make(map[string]bool)
     // ... existing module addresses ...
-    
+
     // Add new precompile addresses for the hardfork
     for addr := range app.EvmKeeper.GetPrecompiles() {
         modAccAddrs[authtypes.NewModuleAddress(addr.String()).String()] = true
     }
-    
+
     return modAccAddrs
 }
 ```
 
-## Step 7: Update app.go wiring to Include EVM Modules
+## Step 8: Update app.go wiring to Include EVM Modules
 
 Key considerations:
+
 - If using skip-mev/feemarket, it needs to be removed in favor of the EVM feemarket module
 - The tracer imports (js/native) are required for EVM tracing functionality
 - Ensure proper ordering in BeginBlockers and InitGenesis for the EVM modules
@@ -455,6 +623,7 @@ Key considerations:
 Modify your `app/app.go` file to:
 
 1. Add EVM imports:
+
 ```go
 import (
     // Add these imports
@@ -462,7 +631,7 @@ import (
     "cosmossdk.io/math"
     ante "github.com/cosmos/evm/ante"
     evmevmante "github.com/cosmos/evm/ante/evm"
-	evmante "github.com/cosmos/evm/ante"
+ evmante "github.com/cosmos/evm/ante"
     evmencoding "github.com/cosmos/evm/encoding"
     srvflags "github.com/cosmos/evm/server/flags"
     cosmosevmtypes "github.com/cosmos/evm/types"
@@ -479,49 +648,52 @@ import (
     "github.com/cosmos/evm/x/vm/core/vm"
     evmkeeper "github.com/cosmos/evm/x/vm/keeper"
     evmtypes "github.com/cosmos/evm/x/vm/types"
-    
-	// Replace default transfer with EVM's transfer (if using IBC)
-	transfer "github.com/cosmos/evm/x/ibc/transfer"
-	ibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
 
-	// Remove standard transfer imports if replacing
-	// "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	// ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+ // Replace default transfer with EVM's transfer (if using IBC)
+ transfer "github.com/cosmos/evm/x/ibc/transfer"
+ ibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
+
+ // Remove standard transfer imports if replacing
+ // "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+ // ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 )
 ```
 
 2. Add EVM module to account permissions:
+
 ```go
 var maccPerms = map[string][]string{
     // Add these entries
-	evmtypes.ModuleName:       {authtypes.Minter, authtypes.Burner}, // Allows EVM module to mint/burn
-	feemarkettypes.ModuleName: nil,                                  // Fee market doesn't need permissions
-	erc20types.ModuleName:     {authtypes.Minter, authtypes.Burner}, // Allows erc20 module to mint/burn for token pairs
+ evmtypes.ModuleName:       {authtypes.Minter, authtypes.Burner}, // Allows EVM module to mint/burn
+ feemarkettypes.ModuleName: nil,                                  // Fee market doesn't need permissions
+ erc20types.ModuleName:     {authtypes.Minter, authtypes.Burner}, // Allows erc20 module to mint/burn for token pairs
 }
 ```
 
 3. Update the app struct to include EVM keepers:
+
 ```go
 type ChainApp struct {
     // Add these fields
     FeeMarketKeeper     feemarketkeeper.Keeper
     EVMKeeper           *evmkeeper.Keeper
     Erc20Keeper         erc20keeper.Keeper
-    
+
     // ... existing fields
 }
 ```
 
 4. Update the NewChainApp constructor to include the EVMOptionsFn parameter:
+
 ```go
 func NewChainApp(
-	// ... existing params
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	evmAppOptions EVMOptionsFn, // <<< Add this parameter
-	baseAppOptions ...func(*baseapp.BaseApp),
+ // ... existing params
+ loadLatest bool,
+ appOpts servertypes.AppOptions,
+ evmAppOptions EVMOptionsFn, // <<< Add this parameter
+ baseAppOptions ...func(*baseapp.BaseApp),
 ) *ChainApp { // Or your app struct type
-	// ...
+ // ...
 ```
 
 5. Replace standard SDK encoding with `evmencoding.MakeConfig()`.
@@ -538,17 +710,19 @@ txConfig := encodingConfig.TxConfig
 ```
 
 6. Call EVM App options:
+
 ```go
 bApp.SetTxEncoder(txConfig.TxEncoder())
 
 // Add after encoder has been set:
 if err := evmAppOptions(bApp.ChainID()); err != nil {
-	// Initialize the EVM application configuration
-	panic(fmt.Errorf("failed to initialize EVM app configuration: %w", err))
+ // Initialize the EVM application configuration
+ panic(fmt.Errorf("failed to initialize EVM app configuration: %w", err))
 }
 ```
 
 7. Add EVM store keys:
+
 ```go
 keys := storetypes.NewKVStoreKeys(
 // Add these keys
@@ -558,14 +732,15 @@ erc20types.StoreKey,
 )
 
 tkeys := storetypes.NewTransientStoreKeys(
-	paramstypes.TStoreKey,
-	// Add these keys:
-	evmtypes.TransientKey,
-	feemarkettypes.TransientKey,
+ paramstypes.TStoreKey,
+ // Add these keys:
+ evmtypes.TransientKey,
+ feemarkettypes.TransientKey,
 )
 ```
 
 8. Initialize EVM keepers:
+
 ```go
 app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
     appCodec,
@@ -631,7 +806,7 @@ Note that the IBC keeper is an extended version from the `x/ibc` module from Cos
 // import "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 // import ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 
-// Add 
+// Add
 import transfer "github.com/cosmos/evm/x/ibc/transfer"
 import ibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
 ```
@@ -674,6 +849,7 @@ app.Erc20Keeper = *app.Erc20Keeper.SetTransferKeeper(app.TransferKeeper).
 This wiring is essential for the automatic ERC20 registration feature. Without it, IBC tokens transferred to your chain won't automatically have corresponding ERC20 contracts deployed.
 
 10. Add EVM modules to app modules:
+
 ```go
 app.ModuleManager = module.NewManager(
     // ... existing modules
@@ -686,6 +862,7 @@ app.ModuleManager = module.NewManager(
 ```
 
 11. Update module ordering:
+
 ```go
 app.ModuleManager.SetOrderBeginBlockers(
     minttypes.ModuleName,
@@ -703,25 +880,26 @@ app.ModuleManager.SetOrderEndBlockers(
     erc20types.ModuleName,
     // ... existing modules
 )
-// ... 
+// ...
 
 // Add to SetOrderInitGenesis
 genesisModuleOrder := []string{
-	// ... existing modules
-	evmtypes.ModuleName,
-	feemarkettypes.ModuleName, // feemarket module must be initialized before genutil module
-	erc20types.ModuleName,
-	// ... existing modules
+ // ... existing modules
+ evmtypes.ModuleName,
+ feemarkettypes.ModuleName, // feemarket module must be initialized before genutil module
+ erc20types.ModuleName,
+ // ... existing modules
 }
 
 ```
 
 12. Update Ante handler options:
+
 ```go
 options := chainante.HandlerOptions{
     // Add these options
     FeeMarketKeeper: app.FeeMarketKeeper,
-	
+
     EvmKeeper:              app.EVMKeeper,
     ExtensionOptionChecker: cosmosevmtypes.HasDynamicFeeExtensionOption,
     SigGasConsumer:         evmante.SigVerificationGasConsumer,
@@ -732,6 +910,7 @@ options := chainante.HandlerOptions{
 ```
 
 13. Update the DefaultGenesis method to include EVM genesis:
+
 ```go
 func (a *ChainApp) DefaultGenesis() map[string]json.RawMessage {
     genesis := a.BasicModuleManager.DefaultGenesis(a.appCodec)
@@ -757,6 +936,7 @@ func (a *ChainApp) DefaultGenesis() map[string]json.RawMessage {
 ```
 
 14. Update blocked addresses to include precompiles:
+
 ```go
 func BlockedAddresses() map[string]bool {
     // Add after existing code:
@@ -768,12 +948,13 @@ func BlockedAddresses() map[string]bool {
     for _, precompile := range blockedPrecompilesHex {
         blockedAddrs[evmutils.EthHexToCosmosAddr(precompile).String()] = true
     }
-    
+
     return blockedAddrs
 }
 ```
 
 15. Update params keeper subspaces:
+
 ```go
     func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
         paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
@@ -803,13 +984,14 @@ func (app *ChainApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 }
 ```
 
-## Step 8: Update Every Place the EVMAppOptions is Used
+## Step 9: Update Every Place the EVMAppOptions is Used
 
 Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all relevant files.
 
 `NewChainApp` Callsites: Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/evmd/commands.go`, `cmd/evmd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
 
-*   Example (`app/test_helpers.go`):
+- Example (`app/test_helpers.go`):
+
     ```go
     func setup(
         // ...
@@ -822,7 +1004,9 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
         )
     }
     ```
-*   Example (`cmd/evmd/commands.go`):
+
+- Example (`cmd/evmd/commands.go`):
+
     ```go
     func newApp( /* ... */ ) servertypes.Application {
         // ...
@@ -845,7 +1029,7 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
     }
     ```
 
-## Step 9: Create EVM Ante Handler Files
+## Step 10: Create EVM Ante Handler Files
 
 The EVM requires a different set of AnteHandlers compared to Cosmos. To handle those transactions,
 set up the handlers as follows in an `ante` folder:
@@ -856,93 +1040,93 @@ Create a `handler_options.go`:
 package ante
 
 import (
-	"context"
+ "context"
 
-	addresscodec "cosmossdk.io/core/address"
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	txsigning "cosmossdk.io/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	anteinterfaces "github.com/cosmos/evm/ante/interfaces"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+ addresscodec "cosmossdk.io/core/address"
+ errorsmod "cosmossdk.io/errors"
+ storetypes "cosmossdk.io/store/types"
+ circuitkeeper "cosmossdk.io/x/circuit/keeper"
+ txsigning "cosmossdk.io/x/tx/signing"
+ "github.com/cosmos/cosmos-sdk/codec"
+ sdk "github.com/cosmos/cosmos-sdk/types"
+ errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+ "github.com/cosmos/cosmos-sdk/types/tx/signing"
+ "github.com/cosmos/cosmos-sdk/x/auth/ante"
+ authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+ anteinterfaces "github.com/cosmos/evm/ante/interfaces"
+ ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 )
 
 // BankKeeper defines the contract needed for supply related APIs (noalias)
 type BankKeeper interface {
-	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
-	SendCoins(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+ IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
+ SendCoins(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error
+ SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 type AccountKeeper interface {
-	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx context.Context, account sdk.AccountI)
-	RemoveAccount(ctx context.Context, account sdk.AccountI)
-	GetParams(ctx context.Context) (params authtypes.Params)
-	GetSequence(ctx context.Context, addr sdk.AccAddress) (uint64, error)
-	AddressCodec() addresscodec.Codec
+ NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+ GetModuleAddress(moduleName string) sdk.AccAddress
+ GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+ SetAccount(ctx context.Context, account sdk.AccountI)
+ RemoveAccount(ctx context.Context, account sdk.AccountI)
+ GetParams(ctx context.Context) (params authtypes.Params)
+ GetSequence(ctx context.Context, addr sdk.AccAddress) (uint64, error)
+ AddressCodec() addresscodec.Codec
 }
 
 // HandlerOptions defines the list of module keepers required to run the EVM
 // AnteHandler decorators.
 type HandlerOptions struct {
-	Cdc                    codec.BinaryCodec
-	AccountKeeper          AccountKeeper
-	BankKeeper             BankKeeper
-	FeegrantKeeper         ante.FeegrantKeeper
-	ExtensionOptionChecker ante.ExtensionOptionChecker
-	SignModeHandler        *txsigning.HandlerMap
-	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
-	TxFeeChecker           ante.TxFeeChecker // safe to be nil
+ Cdc                    codec.BinaryCodec
+ AccountKeeper          AccountKeeper
+ BankKeeper             BankKeeper
+ FeegrantKeeper         ante.FeegrantKeeper
+ ExtensionOptionChecker ante.ExtensionOptionChecker
+ SignModeHandler        *txsigning.HandlerMap
+ SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
+ TxFeeChecker           ante.TxFeeChecker // safe to be nil
 
-	MaxTxGasWanted  uint64
-	FeeMarketKeeper anteinterfaces.FeeMarketKeeper
-	EvmKeeper       anteinterfaces.EVMKeeper
+ MaxTxGasWanted  uint64
+ FeeMarketKeeper anteinterfaces.FeeMarketKeeper
+ EvmKeeper       anteinterfaces.EVMKeeper
 
-	IBCKeeper     *ibckeeper.Keeper
-	CircuitKeeper *circuitkeeper.Keeper
+ IBCKeeper     *ibckeeper.Keeper
+ CircuitKeeper *circuitkeeper.Keeper
 }
 
 // Validate checks if the keepers are defined
 func (options HandlerOptions) Validate() error {
-	if options.Cdc == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "codec is required for AnteHandler")
-	}
-	if options.AccountKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "account keeper is required for AnteHandler")
-	}
-	if options.BankKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "bank keeper is required for AnteHandler")
-	}
-	if options.SigGasConsumer == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "signature gas consumer is required for AnteHandler")
-	}
-	if options.SignModeHandler == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "sign mode handler is required for AnteHandler")
-	}
-	if options.CircuitKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "circuit keeper is required for ante builder")
-	}
+ if options.Cdc == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "codec is required for AnteHandler")
+ }
+ if options.AccountKeeper == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "account keeper is required for AnteHandler")
+ }
+ if options.BankKeeper == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "bank keeper is required for AnteHandler")
+ }
+ if options.SigGasConsumer == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "signature gas consumer is required for AnteHandler")
+ }
+ if options.SignModeHandler == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "sign mode handler is required for AnteHandler")
+ }
+ if options.CircuitKeeper == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "circuit keeper is required for ante builder")
+ }
 
-	if options.TxFeeChecker == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "tx fee checker is required for AnteHandler")
-	}
-	if options.FeeMarketKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "fee market keeper is required for AnteHandler")
-	}
-	if options.EvmKeeper == nil {
-		return errorsmod.Wrap(errortypes.ErrLogic, "evm keeper is required for AnteHandler")
-	}
+ if options.TxFeeChecker == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "tx fee checker is required for AnteHandler")
+ }
+ if options.FeeMarketKeeper == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "fee market keeper is required for AnteHandler")
+ }
+ if options.EvmKeeper == nil {
+  return errorsmod.Wrap(errortypes.ErrLogic, "evm keeper is required for AnteHandler")
+ }
 
-	return nil
+ return nil
 }
 ```
 
@@ -952,87 +1136,89 @@ Create an `ante_evm.go` file to handle EVM transactions:
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmante "github.com/cosmos/evm/ante/evm"
+ sdk "github.com/cosmos/cosmos-sdk/types"
+ evmante "github.com/cosmos/evm/ante/evm"
 )
 
 // newMonoEVMAnteHandler creates the sdk.AnteHandler implementation for the EVM transactions.
 func newMonoEVMAnteHandler(options HandlerOptions) sdk.AnteHandler {
-	return sdk.ChainAnteDecorators(
-		evmante.NewEVMMonoDecorator(
-			options.AccountKeeper,
-			options.FeeMarketKeeper,
-			options.EvmKeeper,
-			options.MaxTxGasWanted,
-		),
-	)
+ return sdk.ChainAnteDecorators(
+  evmante.NewEVMMonoDecorator(
+   options.AccountKeeper,
+   options.FeeMarketKeeper,
+   options.EvmKeeper,
+   options.MaxTxGasWanted,
+  ),
+ )
 }
 ```
 
 Move the existing Cosmos AnteHandler instantiation into a new file, `ante_cosmos.go`:
+
 ```go
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	evmcosmosante "github.com/cosmos/evm/ante/cosmos"
-	evmante "github.com/cosmos/evm/ante/evm"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
+ sdk "github.com/cosmos/cosmos-sdk/types"
+ "github.com/cosmos/cosmos-sdk/x/auth/ante"
+ sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+ evmcosmosante "github.com/cosmos/evm/ante/cosmos"
+ evmante "github.com/cosmos/evm/ante/evm"
+ evmtypes "github.com/cosmos/evm/x/vm/types"
 
-	sdkmath "cosmossdk.io/math"
-	circuitante "cosmossdk.io/x/circuit/ante"
-	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
-	poaante "github.com/strangelove-ventures/poa/ante"
+ sdkmath "cosmossdk.io/math"
+ circuitante "cosmossdk.io/x/circuit/ante"
+ ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+ poaante "github.com/strangelove-ventures/poa/ante"
 )
 
 // newCosmosAnteHandler creates the default ante handler for Cosmos transactions
 func NewCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
-	poaDoGenTxRateValidation := false
-	poaRateFloor := sdkmath.LegacyMustNewDecFromStr("0.10")
-	poaRateCeil := sdkmath.LegacyMustNewDecFromStr("0.50")
+ poaDoGenTxRateValidation := false
+ poaRateFloor := sdkmath.LegacyMustNewDecFromStr("0.10")
+ poaRateCeil := sdkmath.LegacyMustNewDecFromStr("0.50")
 
-	return sdk.ChainAnteDecorators(
-		evmcosmosante.NewRejectMessagesDecorator(), // reject MsgEthereumTxs
-		evmcosmosante.NewAuthzLimiterDecorator( // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
-			sdk.MsgTypeURL(&sdkvesting.MsgCreateVestingAccount{}),
-		),
+ return sdk.ChainAnteDecorators(
+  evmcosmosante.NewRejectMessagesDecorator(), // reject MsgEthereumTxs
+  evmcosmosante.NewAuthzLimiterDecorator( // disable the Msg types that cannot be included on an authz.MsgExec msgs field
+   sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
+   sdk.MsgTypeURL(&sdkvesting.MsgCreateVestingAccount{}),
+  ),
 
-		ante.NewSetUpContextDecorator(),
-		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
-		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		ante.NewValidateBasicDecorator(),
-		ante.NewTxTimeoutHeightDecorator(),
-		ante.NewValidateMemoDecorator(options.AccountKeeper),
-		evmcosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
-		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
-		// SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewSetPubKeyDecorator(options.AccountKeeper),
-		ante.NewValidateSigCountDecorator(options.AccountKeeper),
-		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
-		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
-		poaante.NewPOADisableStakingDecorator(),
-		poaante.NewPOADisableWithdrawDelegatorRewards(),
-		poaante.NewCommissionLimitDecorator(poaDoGenTxRateValidation, poaRateFloor, poaRateCeil),
-	)
+  ante.NewSetUpContextDecorator(),
+  circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
+  ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
+  ante.NewValidateBasicDecorator(),
+  ante.NewTxTimeoutHeightDecorator(),
+  ante.NewValidateMemoDecorator(options.AccountKeeper),
+  evmcosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+  ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+  ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+  // SetPubKeyDecorator must be called before all signature verification decorators
+  ante.NewSetPubKeyDecorator(options.AccountKeeper),
+  ante.NewValidateSigCountDecorator(options.AccountKeeper),
+  ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+  ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+  ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+  ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
+  evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+  poaante.NewPOADisableStakingDecorator(),
+  poaante.NewPOADisableWithdrawDelegatorRewards(),
+  poaante.NewCommissionLimitDecorator(poaDoGenTxRateValidation, poaRateFloor, poaRateCeil),
+ )
 }
 ```
 
 Finally, tie this all together into a global AnteHandler in `ante.go` to handle both types of transactions:
+
 ```go
 package ante
 
 import (
-	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+ errorsmod "cosmossdk.io/errors"
+ sdk "github.com/cosmos/cosmos-sdk/types"
+ errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+ authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // NewAnteHandler returns an ante handler responsible for attempting to route an
@@ -1040,49 +1226,50 @@ import (
 // transaction-level processing (e.g. fee payment, signature verification) before
 // being passed onto it's respective handler.
 func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
-	return func(
-		ctx sdk.Context, tx sdk.Tx, sim bool,
-	) (newCtx sdk.Context, err error) {
-		var anteHandler sdk.AnteHandler
+ return func(
+  ctx sdk.Context, tx sdk.Tx, sim bool,
+ ) (newCtx sdk.Context, err error) {
+  var anteHandler sdk.AnteHandler
 
-		txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx)
-		if ok {
-			opts := txWithExtensions.GetExtensionOptions()
-			if len(opts) > 0 {
-				switch typeURL := opts[0].GetTypeUrl(); typeURL {
-				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
-					// handle as *evmtypes.MsgEthereumTx
-					anteHandler = newMonoEVMAnteHandler(options)
-				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
-					// cosmos-sdk tx with dynamic fee extension
-					anteHandler = NewCosmosAnteHandler(options)
-				default:
-					return ctx, errorsmod.Wrapf(
-						errortypes.ErrUnknownExtensionOptions,
-						"rejecting tx with unsupported extension option: %s", typeURL,
-					)
-				}
+  txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx)
+  if ok {
+   opts := txWithExtensions.GetExtensionOptions()
+   if len(opts) > 0 {
+    switch typeURL := opts[0].GetTypeUrl(); typeURL {
+    case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
+     // handle as *evmtypes.MsgEthereumTx
+     anteHandler = newMonoEVMAnteHandler(options)
+    case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
+     // cosmos-sdk tx with dynamic fee extension
+     anteHandler = NewCosmosAnteHandler(options)
+    default:
+     return ctx, errorsmod.Wrapf(
+      errortypes.ErrUnknownExtensionOptions,
+      "rejecting tx with unsupported extension option: %s", typeURL,
+     )
+    }
 
-				return anteHandler(ctx, tx, sim)
-			}
-		}
+    return anteHandler(ctx, tx, sim)
+   }
+  }
 
-		// handle as totally normal Cosmos SDK tx
-		switch tx.(type) {
-		case sdk.Tx:
-			anteHandler = NewCosmosAnteHandler(options)
-		default:
-			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
-		}
+  // handle as totally normal Cosmos SDK tx
+  switch tx.(type) {
+  case sdk.Tx:
+   anteHandler = NewCosmosAnteHandler(options)
+  default:
+   return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
+  }
 
-		return anteHandler(ctx, tx, sim)
-	}
+  return anteHandler(ctx, tx, sim)
+ }
 }
 ```
 
-## Step 10: Update Command Files
+## Step 11: Update Command Files
 
 Apply these changes to your chain's command files `cmd/evmd/commands.go`:
+
 ```go
 // Add imports
 evmserverconfig "github.com/cosmos/evm/server/config"
@@ -1093,7 +1280,7 @@ srvflags "github.com/cosmos/evm/server/flags"
 // Update CustomAppConfig struct
 type CustomAppConfig struct {
     serverconfig.Config
-    
+
     // Add these fields
     EVM     evmserverconfig.EVMConfig
     JSONRPC evmserverconfig.JSONRPCConfig
@@ -1109,10 +1296,10 @@ func initAppConfig() (string, interface{}) {
         JSONRPC: *evmserverconfig.DefaultJSONRPCConfig(),
         TLS:     *evmserverconfig.DefaultTLSConfig(),
     }
-    
+
     // Add EVM template to existing config
     customAppTemplate += evmserverconfig.DefaultEVMConfigTemplate
-    
+
     return customAppTemplate, customAppConfig
 }
 
@@ -1121,20 +1308,20 @@ func initRootCmd(
     // ...
 ) {
     // Replace server.AddCommands with the following to
-	// add EVM Comet commands to start server, etc.:
+ // add EVM Comet commands to start server, etc.:
     evmserver.AddCommands(
         rootCmd,
         evmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
         appExport,
         addModuleInitFlags,
     )
-    
+
     // Add EVM key commands
     rootCmd.AddCommand(
-		// ... existing commands
+  // ... existing commands
         evmcmd.KeyCommands(app.DefaultNodeHome, true),
     )
-    
+
     // Add tx flags
     var err error
     rootCmd, err = srvflags.AddTxFlags(rootCmd)
@@ -1144,7 +1331,7 @@ func initRootCmd(
 }
 ```
 
-## Step 11: Disable Sign Mode Textual
+## Step 12: Disable Sign Mode Textual
 
 Note: Sign mode textual must be disabled when using EVM compatibility as it's incompatible with the ethereum signing methods. Add the following to your application configuration:
 
@@ -1163,11 +1350,12 @@ func init() {
 }
 ```
 
-## Step 12: Update root.go to Use EVM-Compatible Keyring and Coin Type
+## Step 13: Update root.go to Use EVM-Compatible Keyring and Coin Type
 
 **Important:** The EVM chain ID needs to be properly initialized in your root.go. See the [Cosmos EVM reference implementation](https://github.com/cosmos/evm/blob/0e511d32206b1ac709a0eb0ddb1aa21d29e833b8/cmd/evmd/cmd/root.go#L136-L157) for details on chain ID initialization.
 
 Update `cmd/evmd/root.go`:
+
 ```go
 import (
     // Add import
@@ -1182,7 +1370,7 @@ tempApp := app.NewChainApp(
 func NewRootCmd() *cobra.Command {
     // In client context setup
     clientCtx = clientCtx.
-		// ... existing options
+  // ... existing options
         WithBroadcastMode(flags.FlagBroadcastMode). // Add this
         WithKeyringOptions(evmkeyring.Option()).    // Add this
         WithLedgerHasProtobuf(true)                 // Add this
@@ -1195,17 +1383,18 @@ func NewRootCmd() *cobra.Command {
 }
 ```
 
-## Step 12: Understanding Chain ID Usage
+## Step 14: Understanding Chain ID Usage
 
 When to use which chain ID:
+
 - Cosmos Chain ID (string): Used for CometBFT RPC, IBC relayers, and Cosmos SDK operations
 - EVM Chain ID (integer): Used for EVM transactions, MetaMask connections, and Ethereum tooling
 
 Note: Even with Eureka, Cosmos chains should still use Cosmos IBC, not Solidity IBC. The separation allows chains to maintain their Cosmos identity while being EVM-compatible.
 
-## Step 13: Final Checks and Running Your Local Chain
+## Step 15: Final Checks and Running Your Local Chain
 
-Refer to the following script for an example for how to set up a local testnet: https://github.com/cosmos/evm/blob/main/local_node.sh
+Refer to the following script for an example for how to set up a local testnet: <https://github.com/cosmos/evm/blob/main/local_node.sh>
 
 ## Troubleshooting Tips
 
@@ -1230,6 +1419,7 @@ When using development tools like Foundry and Hardhat with your Cosmos EVM chain
 Note: Any functions that require the 'fork' feature (such as forking mainnet Ethereum or other chains) are not supported in Cosmos EVM. This is because Cosmos EVM chains have their own state model and cannot directly fork external EVM chains.
 
 Features that won't work:
+
 - `--fork-url` in Foundry
 - Hardhat's mainnet forking
 - Any testing that relies on forking external chain state
@@ -1248,6 +1438,7 @@ Access Etch: Visit [etch.html](./etch.html) to use the Etch testing environment.
 4. Unit Testing: Standard Solidity unit tests work normally
 
 Example Foundry configuration for Cosmos EVM:
+
 ```toml
 [profile.default]
 src = 'src'
