@@ -1,26 +1,43 @@
 # Wallet Integration
 
-Wallet integration is an essential aspect of dApp development that allows users to securely interact with blockchain-based
-applications. Here are some key points from various sources on wallet integration in dApp development:
+Wallet integration is an essential aspect of dApp development that allows users to securely interact with blockchain-based applications.
 
-- The integration implementation checklist for dApp developers consists of three categories: frontend features,
-transactions and wallet interactions, and more. Developers enabling transactions on their dApp have to determine
-the wallet type of the user, create the transaction, request signatures from the corresponding wallet, and finally broadcast.
+## EVM Wallet Compatibility
 
-- Leverage Metamask and any other EVM-compatible wallet, Keplr, Leap, Ledger, WalletConnect and more with Cosmos EVM.
+**Any standard EVM wallet works out of the box with Cosmos EVM chains.** This includes popular wallets like MetaMask, Rabby, WalletConnect, and any other wallet that supports Ethereum and EVM-compatible chains. No special configuration or custom integration is required - simply add your chain's RPC endpoint and chain ID to any EVM wallet.
 
-- Head over to our [Cosmos EVM Client Integrations](./../../develop/tools/client-integrations)
-  to leverage our Typescript or Python libraries.
+### Key Integration Points
 
-| Wallet     | Support            | URL                                                             |
-| ---------- | --------------     | --------------------------------------------------------------- |
-| Keplr      | `cosmos, ethereum` | [Extension](https://chromewebstore.google.com/detail/nkbihfbeogaeaoehlefnkodbefgpgknn) |
-| Metamask   | `ethereum`         | [Extension](https://chromewebstore.google.com/detail/dmkamcknogkgcdfhhbddcghachkejeap) |
-| Rabby      | `ethereum`         | [Extension](https://chromewebstore.google.com/detail/acmacodkjbdgmoleebolmdjonilkdbch) |
+- **Standard EVM RPC**: Cosmos EVM exposes the standard Ethereum JSON-RPC API, ensuring compatibility with all EVM wallets
+- **EIP-1559 Support**: Full support for EIP-1559 dynamic fee transactions, enabling automatic gas estimation
+- **Address Format**: Uses standard Ethereum addresses (0x format) for EVM transactions
+- **Transaction Types**: Supports all standard Ethereum transaction types including legacy and EIP-1559 transactions
 
-## Gas & Estimation
+## Wallet Support
 
-When developing and running dApps on Cosmos EVM, the wallet configuration will attempt to calculate the correct gas amount
-for user's to sign. [Gas and Fees](./../../../protocol/concepts/gas-and-fees) breaks down these concepts in more detail.
-We have a module called [feemarket](./../../../protocol/modules/feemarket#concepts) that describes our module implementation
-of transaction prioritization since prior to Cosmos SDK 0.46 it did not have such implementation.
+| Wallet     | Type               | Notes                                                           |
+| ---------- | ------------------ | --------------------------------------------------------------- |
+| MetaMask   | EVM                | Works out of the box - just add network RPC                    |
+| Rabby      | EVM                | Works out of the box - just add network RPC                    |
+| WalletConnect | EVM             | Standard WalletConnect integration works                        |
+| Keplr      | Cosmos + EVM       | Supports both Cosmos and Ethereum transaction formats           |
+| Leap       | Cosmos + EVM       | Supports both Cosmos and Ethereum transaction formats           |
+| Ledger     | Hardware           | Compatible via MetaMask or other wallet interfaces              |
+
+## Client Libraries
+
+For programmatic wallet integration, check out our [Client Integrations](./../../develop/tools/client-integrations) which provide TypeScript and Python libraries for interacting with Cosmos EVM chains.
+
+## Quick Start
+
+To add a Cosmos EVM chain to MetaMask or any EVM wallet:
+
+1. Open your wallet and navigate to "Add Network"
+2. Enter the following details:
+   - **Network Name**: Your chain name
+   - **RPC URL**: Your chain's JSON-RPC endpoint (port 8545)
+   - **Chain ID**: Your EVM chain ID (integer)
+   - **Currency Symbol**: Your native token symbol
+   - **Block Explorer URL**: (optional) Your chain's block explorer
+
+That's it! Your wallet is now ready to interact with the Cosmos EVM chain.
