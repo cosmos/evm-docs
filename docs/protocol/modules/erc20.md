@@ -305,7 +305,7 @@ Conversion of a registered `TokenPair` can be done via:
 #### 1. Registered Coin
 
 :::tip
-👉 **Context:** A `TokenPair` has been created through a `RegisterCoinProposal` governance proposal.
+ **Context:** A `TokenPair` has been created through a `RegisterCoinProposal` governance proposal.
 The proposal created an `ERC20` contract
 ([ERC20Mintable by openzeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20))
 of the ERC20 token representation of the Coin from the `ModuleAccount`,
@@ -354,7 +354,7 @@ and thus granting it the permission to call the `mint()` and `burnFrom()` method
 #### 2. Registered ERC20
 
 :::tip
-👉 **Context:** A `TokenPair` has been created through a `RegisterERC20Proposal` governance proposal.
+ **Context:** A `TokenPair` has been created through a `RegisterERC20Proposal` governance proposal.
 The `ModuleAccount` is not the owner of the contract, so it can't mint new tokens or burn on behalf of the user.
 The mechanism described below follows the same model as the ICS20 standard,
 by using escrow & mint / burn & unescrow logic.

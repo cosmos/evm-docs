@@ -282,7 +282,7 @@ and then emitted through a cosmos event during `EndBlock` processing.
 They can be queried via gRPC and JSON-RPC.
 
 :::tip
-👉 **Note**: Since they are not stored on state, Transaction Logs and Block Blooms are not persisted after upgrades.
+ **Note**: Since they are not stored on state, Transaction Logs and Block Blooms are not persisted after upgrades.
 A user must use an archival node after upgrades in order to obtain legacy chain events.
 :::
 
@@ -599,7 +599,7 @@ to understand the State Transitions in detail.
 ### Client-Side
 
 :::tip
-👉 This is based on the `eth_sendTransaction` JSON-RPC
+ This is based on the `eth_sendTransaction` JSON-RPC
 :::
 
 1. A user submits a transaction via one of the available JSON-RPC endpoints
