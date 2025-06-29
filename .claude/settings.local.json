@@ -11,7 +11,11 @@
       "Bash(grep:*)",
       "Bash(npm run start:*)",
       "Bash(npm install)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(./evmd --help)",
+      "Bash(./evmd:*)",
+      "Bash(mv:*)",
+      "WebFetch(domain:skip-protocol.notion.site)"
     ],
     "deny": []
   }
