@@ -70,14 +70,16 @@ replace (
 2.  **Account Configuration:** Use `eth_secp256k1` as the standard account type with coin type `60` for Ethereum compatibility.
     *   **Key Algorithm:** Defaults to `eth_secp256k1` (previously `secp256k1`)
     *   **Coin Type (SLIP-0044):** Change from `118` (Cosmos default) to `60` (Ethereum standard)
+    *   **Note:** The coin type can be changed during a chain upgrade if needed, rather than being permanently hardcoded.
     *   **Locations & Examples:**
         *   `app/app.go`: `const CoinType uint32 = 60`
         *   `chain_registry.json`: `"slip44": 60`
         *   `chains/*.json`: `"coin_type": 60`
         *   `interchaintest/*`: Update coin type constants/variables.
 
-3.  **Base Denomination Units:** Change from `6` decimals (Cosmos convention) to `18` decimals (EVM/Ethereum standard). This impacts how token amounts are represented.
-    *   **Locations & Examples:**
+3.  **Base Denomination Units (Optional but Recommended):** While it's optional to change from `6` decimals (Cosmos convention) to `18` decimals (EVM/Ethereum standard), it is highly recommended for better EVM compatibility.
+    *   **Note:** This change impacts how token amounts are represented and requires updating the SDK Power Reduction factor.
+    *   **If you choose to use 18 decimals:**
         *   `app/app.go`: `const BaseDenomUnit int64 = 18`
         *   `chain_registry_assets.json`:
             ```json
@@ -94,7 +96,7 @@ replace (
             }
             ```
 
-4.  **SDK Power Reduction:** The SDK calculates voting power based on staked tokens. Since the base unit changed (10^6 -> 10^18), update the power reduction factor to match.
+4.  **SDK Power Reduction (Only if using 18 decimals):** If you changed to 18 decimals, update the power reduction factor to match.
     *   **Location:** Add an `init()` function in `app/app.go`:
         ```go
         import (
@@ -408,6 +410,24 @@ func NewAvailableStaticPrecompiles(
 }
 ```
 
+**Important Note on Blocked Addresses:** When adding new hardforks to your EVM chain, you must update the list of blocked addresses to include any new precompile addresses introduced by that hardfork. Failing to do so can result in security vulnerabilities where users could send funds to precompile addresses that would become unrecoverable.
+
+For example, when enabling a hardfork that introduces new precompiles:
+```go
+// In your app.go, update the blocked addresses list
+func (app *ChainApp) BlockedModuleAccountAddrs() map[string]bool {
+    modAccAddrs := make(map[string]bool)
+    // ... existing module addresses ...
+    
+    // Add new precompile addresses for the hardfork
+    for addr := range app.EvmKeeper.GetPrecompiles() {
+        modAccAddrs[authtypes.NewModuleAddress(addr.String()).String()] = true
+    }
+    
+    return modAccAddrs
+}
+```
+
 ## Step 7: Update app.go wiring to Include EVM Modules
 
 **Important Notes:**
@@ -616,15 +636,25 @@ app.TransferKeeper = ibctransferkeeper.NewKeeper(
 )
 ```
 
-**Important:** After initializing the TransferKeeper, you must wire the ERC20 callbacks:
+**Important:** After initializing the TransferKeeper, you must wire the ERC20 callbacks for automatic ERC20 token registration when IBC tokens are transferred:
 
 ```go
-// Wire IBC callbacks for ERC20
+// Wire IBC callbacks for ERC20 automatic token registration
+// This enables automatic creation of ERC20 contracts for IBC tokens
 transferModule := transfer.NewIBCModule(app.TransferKeeper)
+
+// Set the transfer keeper and ICS20 module on the ERC20 keeper
+// This creates a circular dependency that enables the ERC20 module
+// to intercept IBC transfers and automatically deploy ERC20 contracts
 app.Erc20Keeper = *app.Erc20Keeper.SetTransferKeeper(app.TransferKeeper).
     SetDynamicFeeExtensionKeeper(app.FeeMarketKeeper).
     SetICS20Keeper(transferModule)
+
+// CRITICAL: The transferModule must be created BEFORE setting it on the ERC20 keeper
+// The order matters because the ERC20 keeper needs a reference to the IBC module
 ```
+
+**Note:** This wiring is essential for the automatic ERC20 registration feature. Without it, IBC tokens transferred to your chain won't automatically have corresponding ERC20 contracts deployed.
 
 10. Add EVM modules to app modules:
 ```go
@@ -1097,7 +1127,26 @@ func initRootCmd(
 }
 ```
 
-## Step 11: Update root.go to Use EVM-Compatible Keyring and Coin Type
+## Step 11: Disable Sign Mode Textual
+
+**Important Note:** Sign mode textual must be disabled when using EVM compatibility as it's incompatible with the ethereum signing methods. Add the following to your application configuration:
+
+```go
+// In your app initialization, disable sign mode textual
+func init() {
+    // Disable sign mode textual which is incompatible with EVM
+    enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+    txConfig := tx.NewTxConfigWithOptions(
+        codec,
+        tx.ConfigOptions{
+            EnabledSignModes:           enabledSignModes,
+            TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+        },
+    )
+}
+```
+
+## Step 12: Update root.go to Use EVM-Compatible Keyring and Coin Type
 
 **Important:** The EVM chain ID needs to be properly initialized in your root.go. See the [Cosmos EVM reference implementation](https://github.com/cosmos/evm/blob/0e511d32206b1ac709a0eb0ddb1aa21d29e833b8/cmd/evmd/cmd/root.go#L136-L157) for details on chain ID initialization.
 
@@ -1154,3 +1203,41 @@ Refer to the following script for an example for how to set up a local testnet: 
 - Verify that the key algorithm is set to `eth_secp256k1` in all relevant places.
 
 - If you're having trouble with the chain not recognizing EVM transaction formats, verify that the encoding config is using `evmencoding.MakeConfig()`.
+
+## Using Foundry and Hardhat with Cosmos EVM
+
+When using development tools like Foundry and Hardhat with your Cosmos EVM chain, there are some important considerations:
+
+### Fork Feature Limitations
+
+**Important:** Any functions that require the 'fork' feature (such as forking mainnet Ethereum or other chains) are not supported in Cosmos EVM. This is because Cosmos EVM chains have their own state model and cannot directly fork external EVM chains.
+
+Features that won't work:
+- `--fork-url` in Foundry
+- Hardhat's mainnet forking
+- Any testing that relies on forking external chain state
+
+### Precompile Testing with Etch
+
+For testing precompiled contracts and their interactions, we recommend using the Etch tool. Etch allows you to write and test precompile interactions in a browser-based environment.
+
+**Access Etch:** Visit [etch.html](./etch.html) to use the Etch testing environment.
+
+### Recommended Approach
+
+1. **Local Development:** Deploy and test your contracts on a local Cosmos EVM node
+2. **Precompile Testing:** Use Etch for testing precompile interactions
+3. **Integration Testing:** Test against a running Cosmos EVM testnet
+4. **Unit Testing:** Standard Solidity unit tests work normally
+
+Example Foundry configuration for Cosmos EVM:
+```toml
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+# Point to your local Cosmos EVM node
+eth_rpc_url = "http://localhost:8545"
+# Use your EVM chain ID (not Cosmos chain ID)
+chain_id = 9000
+```
