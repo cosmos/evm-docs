@@ -10,7 +10,8 @@
       "Bash(git commit:*)",
       "Bash(grep:*)",
       "Bash(npm run start:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(awk:*)"
     ],
     "deny": []
   }

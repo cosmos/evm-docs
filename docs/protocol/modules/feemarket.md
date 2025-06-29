@@ -154,7 +154,7 @@ Only BlockGasUsed in previous block needs to be tracked in state for the next ba
 
 ## Begin block
 
-The base fee is calculated at the beginning of each block.
+**Note:** Base fee calculation has been moved to End Block to comply with EIP-1559 specifications. The logic described here now executes at the end of each block.
 
 ### Base Fee
 
@@ -257,7 +257,6 @@ The `x/feemarket` module contains the following parameters:
 | NoBaseFee                | bool    | false          | control the base fee adjustment                                                                                         |
 | BaseFeeChangeDenominator | uint32  | 8              | bounds the amount the base fee that can change between blocks                                                           |
 | ElasticityMultiplier     | uint32  | 2              | bounds the threshold which the base fee will increase or decrease depending on the total gas used in the previous block |
-| BaseFee                  | uint32  | 1000000000     | base fee for EIP-1559 blocks                                                                                            |
 | EnableHeight             | uint32  | 0              | height which enable fee adjustment                                                                                      |
 | MinGasPrice              | sdk.Dec | 0              | global minimum gas price that needs to be paid to include a transaction in a block                                      |
 
