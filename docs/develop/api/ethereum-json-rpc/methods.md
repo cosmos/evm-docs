@@ -175,6 +175,18 @@ The examples also do not include the URL/IP & port combination which must be the
 Block Number can be entered as a Hex string, `"earliest"`, ``"latest"`` or `"pending"`.
 :::
 
+:::info Important Notes about RPC Compatibility
+**EIP-1559 Support**: Cosmos EVM fully supports EIP-1559 transaction types and includes methods like `eth_feeHistory` and `eth_maxPriorityFeePerGas`.
+
+**Missing Methods**: The following methods are available in some other EVM implementations but not currently in Cosmos EVM:
+- `eth_createAccessList` (EIP-2930) - For creating access lists for transactions
+- Most `trace_*` methods except `trace_callMany` - Advanced tracing functionality
+- `engine_*` methods - Used for Engine API (consensus layer communication)
+- `parity_*` methods - Parity/OpenEthereum specific methods
+
+**No-op Methods**: Some miner namespace methods return success but don't perform any action as Cosmos EVM uses Tendermint consensus instead of PoW mining.
+:::
+
 Below is a list of the RPC methods, the parameters and an example response from the namespaces.
 
 ## Web3 Methods
