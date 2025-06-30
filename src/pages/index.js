@@ -53,67 +53,67 @@ function Home() {
           <div className="container">
             <div className="row cards__container">
               <Card
-                to="./integrate"
+                to="./protocol"
                 header={{
-                  label: "Integrate Cosmos EVM",
+                  label: "IBC Native",
                 }}
                 body={{
                   label:
-                    "Getting started on Cosmos EVM with your chain",
+                    "Seamlessly connect to the entire Cosmos ecosystem with built-in IBC support",
                 }}
               />
 
               <Card
                 to="./protocol"
                 header={{
-                  label: "Learn about Cosmos EVM",
+                  label: "EVM Compatibility",
                 }}
                 body={{
                   label:
-                    "Discover why Cosmos EVM is the flagship EVM on the Cosmos Ecosystem",
+                    "Full Ethereum compatibility - deploy existing Solidity contracts and use familiar tools",
                 }}
               />
 
               <Card
                 to="./develop/api"
                 header={{
-                  label: "View Cosmos EVM APIs",
+                  label: "Cosmos SDK Power",
                 }}
                 body={{
                   label:
-                    "Access low-level protocol interfaces to build your custom dapp",
-                }}
-              />
-
-              <Card
-                to="./develop/smart-contracts"
-                header={{
-                  label: "Launch dApp on a Cosmos EVM chain",
-                }}
-                body={{
-                  label:
-                    "Learn everything you need to deploy an EVM-compatible smart contract",
+                    "Leverage the full power of Cosmos SDK modules alongside EVM",
                 }}
               />
 
               <Card
                 to="./protocol/security"
                 header={{
-                  label: "Security on Cosmos EVM",
+                  label: "Battle-Tested",
                 }}
                 body={{
-                  label: "Learn about our Security Policy",
+                  label: "Based on the proven evmOS codebase with enterprise-grade support",
+                }}
+              />
+
+              <Card
+                to="https://docs.cometbft.com/"
+                header={{
+                  label: "High Performance",
+                }}
+                body={{
+                  label:
+                    "CometBFT consensus delivers fast finality and high throughput",
                 }}
               />
 
               <Card
                 to="https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca"
                 header={{
-                  label: "Get Expert Support",
+                  label: "Developer Friendly",
                 }}
                 body={{
                   label:
-                    "Connect with Cosmos EVM experts at Interchain Labs for integration support",
+                    "Comprehensive documentation and active community support",
                 }}
               />
             </div>
