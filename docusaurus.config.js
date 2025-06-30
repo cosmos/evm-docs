@@ -216,10 +216,6 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: 'https://blog.cosmos.network/',
-              },
-              {
                 label: 'GitHub',
                 href: 'https://github.com/cosmos/evm',
               },
@@ -238,7 +234,7 @@ const config = {
       },
       metadata: [
         {
-          name: "Cosmos EVM Docs", 
+          name: "Cosmos EVM Docs",
           content: "Official Cosmos EVM Docs, the native EVM implementation of Cosmos."
         },
         {
@@ -261,12 +257,12 @@ const config = {
       algolia: {
         // The application ID provided by Algolia
         appId: 'IEET1JIXIY',
-  
+
         // Public API key: it is safe to commit it
         apiKey: '9278938f3473a22479c18c8079e2e6b5',
-  
+
         indexName: 'cosmosevmdocs',
-  
+
         contextualSearch: true,
         searchParameters: {},
       },

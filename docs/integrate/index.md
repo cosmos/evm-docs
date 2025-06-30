@@ -67,7 +67,6 @@ Configure both Cosmos and EVM chain IDs separately:
 - EVM Chain ID must be an integer following EIP-155 (e.g., `9000`)
 - The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
 
-
 :::note
 Make sure to confirm your chain-id is not already taken by referring
 to [ethereum-lists](https://github.com/ethereum-lists).
@@ -282,16 +281,19 @@ id = 'cosmoshub-4'
 #### Starting the Relayer
 
 1. Install Hermes:
+
 ```bash
 cargo install ibc-relayer-cli --version 1.7.0
 ```
 
 2. Add your relayer keys:
+
 ```bash
 hermes keys add --chain cosmosevm-1 --mnemonic-file <seed-file>
 ```
 
 3. Create clients, connections, and channels:
+
 ```bash
 # For IBCv1 (current)
 hermes create channel --a-chain cosmosevm-1 --b-chain cosmoshub-4 --a-port transfer --b-port transfer --new-client-connection
@@ -302,6 +304,7 @@ hermes create client --host-chain cosmoshub-4 --reference-chain cosmosevm-1
 ```
 
 4. Start relaying:
+
 ```bash
 hermes start
 ```
@@ -311,12 +314,14 @@ hermes start
 Once your relayer is running, test IBC transfers to verify the automatic ERC20 registration:
 
 1. Send tokens from another chain to your Cosmos EVM chain:
+
 ```bash
 # From source chain
 gaiad tx ibc-transfer transfer transfer channel-0 cosmos1... 1000uatom --from wallet
 ```
 
 2. Verify the IBC token was received and ERC20 was auto-registered:
+
 ```bash
 # Check balance on Cosmos EVM chain
 evmd query bank balances cosmos1...

@@ -103,8 +103,8 @@ ws ws://localhost:8546/
 
 At present there are two key datatypes that are passed over JSON:
 
-* **quantities** and
-* **unformatted byte arrays**.
+- **quantities** and
+- **unformatted byte arrays**.
 
 Both are passed with a hex encoding, however with different requirements to formatting.
 

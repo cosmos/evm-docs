@@ -37,7 +37,7 @@ and dynamically expands/contracts block sizes to deal with peaks of network cong
 
 Before EIP-1559 the transaction fee is calculated with
 
-```
+```sh
 fee = gasPrice * gasLimit
 ```
 
@@ -48,7 +48,7 @@ To submit a transaction, the signer needs to specify the `gasPrice`.
 
 With EIP-1559 enabled, the transaction fee is calculated with
 
-```
+```sh
 fee = (baseFee + priorityTip) * gasLimit
 ```
 
@@ -99,7 +99,7 @@ that a transaction is willing to provide.
 It is derived from the transaction arguments and the base fee parameter.
 Depending on which one is smaller, the effective gas price is either the `baseFee + tip` or the `gasFeeCap`
 
-```
+```sh
 min(baseFee + gasTipCap, gasFeeCap)
 ```
 
@@ -290,7 +290,7 @@ evmd query feemarket base-fee ...
 
 Example Output:
 
-```
+```sh
 base_fee: "512908936"
 ```
 
@@ -310,7 +310,7 @@ evmd query feemarket block-gas ...
 
 Example Output:
 
-```
+```sh
 gas: "21000"
 ```
 
@@ -330,7 +330,7 @@ evmd query params subspace feemarket ElasticityMultiplier ...
 
 Example Output:
 
-```
+```sh
 key: ElasticityMultiplier
 subspace: feemarket
 value: "2"
@@ -385,7 +385,7 @@ are rejected by the `feemarket` `AnteHandle`.
 Calculates the effective fees to deduct and the tx priority according to EIP-1559 spec,
 then deducts the fees and sets the tx priority in the response.
 
-```
+```sh
 effectivePrice = min(baseFee + tipFeeCap, gasFeeCap)
 effectiveTipFee = effectivePrice - baseFee
 priority = effectiveTipFee / DefaultPriorityReduction

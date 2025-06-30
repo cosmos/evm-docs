@@ -145,9 +145,9 @@ It's main architecture components consist of:
 
 * Virtual ROM: contract code is pulled into this read only memory when processing txs
 * Machine state (volatile): changes as the EVM runs and is wiped clean after processing each tx
-    * Program counter (PC)
-    * Gas: keeps track of how much gas is used
-    * Stack and Memory: compute state changes
+  * Program counter (PC)
+  * Gas: keeps track of how much gas is used
+  * Stack and Memory: compute state changes
 * Access to account storage (persistent)
 
 #### State Transitions with Smart Contracts
@@ -381,52 +381,52 @@ this function also resets any preexisting code and storage associated with that 
 An account's coin balance can be is managed through the `BankKeeper`
 and can be read with `GetBalance()` and updated with `AddBalance()` and `SubBalance()`.
 
-- `GetBalance()` returns the EVM denomination balance of the provided address.
+* `GetBalance()` returns the EVM denomination balance of the provided address.
   The denomination is obtained from the module parameters.
-- `AddBalance()` adds the given amount to the address balance coin
+* `AddBalance()` adds the given amount to the address balance coin
   by minting new coins and transferring them to the address.
   The coin denomination is obtained from the module parameters.
-- `SubBalance()` subtracts the given amount from the address balance
+* `SubBalance()` subtracts the given amount from the address balance
   by transferring the coins to an escrow account and then burning them.
   The coin denomination is obtained from the module parameters.
   This function performs a no-op if the amount is negative or the user doesn't have enough funds for the transfer.
 
 The nonce (or transaction sequence) can be obtained from the Account `Sequence` via the auth module `AccountKeeper`.
 
-- `GetNonce()` retrieves the account with the given address and returns the tx sequence (i.e nonce).
+* `GetNonce()` retrieves the account with the given address and returns the tx sequence (i.e nonce).
   The function performs a no-op if the account is not found.
-- `SetNonce()` sets the given nonce as the sequence of the address' account.
+* `SetNonce()` sets the given nonce as the sequence of the address' account.
   If the account doesn't exist, a new one will be created from the address.
 
 The smart contract bytecode containing arbitrary contract logic is stored on the `EVMKeeper`
 and it can be queried with `GetCodeHash()` ,`GetCode()` & `GetCodeSize()`and updated with `SetCode()`.
 
-- `GetCodeHash()` fetches the account from the store and returns its code hash.
+* `GetCodeHash()` fetches the account from the store and returns its code hash.
   If the account doesn't exist or is not an EthAccount type, it returns the empty code hash value.
-- `GetCode()` returns the code byte array associated with the given address.
+* `GetCode()` returns the code byte array associated with the given address.
   If the code hash from the account is empty, this function returns nil.
-- `SetCode()` stores the code byte array to the application KVStore and sets the code hash to the given account.
+* `SetCode()` stores the code byte array to the application KVStore and sets the code hash to the given account.
   The code is deleted from the store if it is empty.
-- `GetCodeSize()` returns the size of the contract code associated with this object, or zero if none.
+* `GetCodeSize()` returns the size of the contract code associated with this object, or zero if none.
 
 Gas refunded needs to be tracked and stored in a separate variable in
 order to add it subtract/add it from/to the gas used value after the EVM
 execution has finalized. The refund value is cleared on every transaction and at the end of every block.
 
-- `AddRefund()` adds the given amount of gas to the in-memory refund value.
-- `SubRefund()` subtracts the given amount of gas from the in-memory refund value.
+* `AddRefund()` adds the given amount of gas to the in-memory refund value.
+* `SubRefund()` subtracts the given amount of gas from the in-memory refund value.
   This function will panic if gas amount is greater than the current refund.
-- `GetRefund()` returns the amount of gas available for return after the tx execution finalizes.
+* `GetRefund()` returns the amount of gas available for return after the tx execution finalizes.
   This value is reset to 0 on every transaction.
 
 The state is stored on the `EVMKeeper`.
 It can be queried with `GetCommittedState()`, `GetState()` and updated with `SetState()`.
 
-- `GetCommittedState()` returns the value set in store for the given key hash.
+* `GetCommittedState()` returns the value set in store for the given key hash.
   If the key is not registered this function returns the empty hash.
-- `GetState()` returns the in-memory dirty state for the given key hash,
+* `GetState()` returns the in-memory dirty state for the given key hash,
   if not exist load the committed value from KVStore.
-- `SetState()` sets the given hashes (key, value) to the state.
+* `SetState()` sets the given hashes (key, value) to the state.
   If the value hash is empty, this function deletes the key from the state,
   the new value is kept in dirty state at first, and will be committed to KVStore in the end.
 
@@ -435,18 +435,18 @@ When a contract commits suicide, the account is marked as suicided,
 when committing the code, storage and account are deleted
 (from the next block and forward).
 
-- `Suicide()` marks the given account as suicided and clears the account balance of the EVM tokens.
-- `HasSuicided()` queries the in-memory flag to check if the account has been marked as suicided in the current transaction.
+* `Suicide()` marks the given account as suicided and clears the account balance of the EVM tokens.
+* `HasSuicided()` queries the in-memory flag to check if the account has been marked as suicided in the current transaction.
   Accounts that are suicided will be returned as non-nil during queries and "cleared" after the block has been committed.
 
 To check account existence use `Exist()` and `Empty()`.
 
-- `Exist()` returns true if the given account exists in store or if it has been
+* `Exist()` returns true if the given account exists in store or if it has been
   marked as suicided.
-- `Empty()` returns true if the address meets the following conditions:
-    - nonce is 0
-    - balance amount for evm denom is 0
-    - account code hash is empty
+* `Empty()` returns true if the address meets the following conditions:
+  * nonce is 0
+  * balance amount for evm denom is 0
+  * account code hash is empty
 
 #### EIP2930 functionality
 
@@ -454,18 +454,18 @@ Supports a transaction type that contains an [access list](https://eips.ethereum
 a list of addresses and storage keys, that the transaction plans to access.
 The access list state is kept in memory and discarded after the transaction committed.
 
-- `PrepareAccessList()` handles the preparatory steps for executing a state transition
+* `PrepareAccessList()` handles the preparatory steps for executing a state transition
   in regard to both EIP-2929 and EIP-2930.
   This method should only be called if Yolov3/Berlin/2929+2930 is applicable at the current number.
-    - Add sender to access list (EIP-2929)
-    - Add destination to access list (EIP-2929)
-    - Add precompiles to access list (EIP-2929)
-    - Add the contents of the optional tx access list (EIP-2930)
-- `AddressInAccessList()` returns true if the address is registered.
-- `SlotInAccessList()` checks if the address and the slots are registered.
-- `AddAddressToAccessList()` adds the given address to the access list.
+  * Add sender to access list (EIP-2929)
+  * Add destination to access list (EIP-2929)
+  * Add precompiles to access list (EIP-2929)
+  * Add the contents of the optional tx access list (EIP-2930)
+* `AddressInAccessList()` returns true if the address is registered.
+* `SlotInAccessList()` checks if the address and the slots are registered.
+* `AddAddressToAccessList()` adds the given address to the access list.
   If the address is already in the access list, this function performs a no-op.
-- `AddSlotToAccessList()` adds the given (address, slot) to the access list.
+* `AddSlotToAccessList()` adds the given (address, slot) to the access list.
   If the address and slot are already in the access list, this function performs a no-op.
 
 #### Snapshot state and Revert functionality
@@ -476,8 +476,8 @@ and the caller could handle the error and don't propagate.
 You can use `Snapshot()` to identify the current state with a revision
 and revert the state to a given revision with `RevertToSnapshot()` to support this feature.
 
-- `Snapshot()` creates a new snapshot and returns the identifier.
-- `RevertToSnapshot(rev)` undo all the modifications up to the snapshot identified as `rev`.
+* `Snapshot()` creates a new snapshot and returns the identifier.
+* `RevertToSnapshot(rev)` undo all the modifications up to the snapshot identified as `rev`.
 
 Cosmos EVM adapted the [go-ethereum journal implementation](https://github.com/ethereum/go-ethereum/blob/master/core/state/journal.go#L39)
 to support this, it uses a list of journal logs to record all the state modification operations done so far,
@@ -501,10 +501,10 @@ Cosmos EVM uses the Cosmos `KVStore` (key-value store) and Cosmos SDK `Keeper` t
 
 To support the interface functionality, it imports 4 module Keepers:
 
-- `auth`: CRUD accounts
-- `bank`: accounting (supply) and CRUD of balances
-- `staking`: query historical headers
-- `fee market`: EIP-1559 base fee for processing `DynamicFeeTx`
+* `auth`: CRUD accounts
+* `bank`: accounting (supply) and CRUD of balances
+* `staking`: query historical headers
+* `fee market`: EIP-1559 base fee for processing `DynamicFeeTx`
   after the `London` hard fork has been activated on the `ChainConfig` parameters
 
 ```go
@@ -605,10 +605,10 @@ to understand the State Transitions in detail.
 1. A user submits a transaction via one of the available JSON-RPC endpoints
    using an Ethereum-compatible client or wallet (eg Metamask, WalletConnect, Ledger, etc):
    a. eth (public) namespace:
-    - `eth_sendTransaction`
-    - `eth_sendRawTransaction`
+    * `eth_sendTransaction`
+    * `eth_sendRawTransaction`
       b. personal (private) namespace:
-    - `personal_sendTransaction`
+    * `personal_sendTransaction`
 2. An instance of `MsgEthereumTx` is created after populating the RPC transaction
    using `SetTxDefaults` to fill missing tx arguments with  default values
 3. The `Tx` fields are validated (stateless) using `ValidateBasic()`
@@ -642,37 +642,37 @@ It checks if the `Tx` is an Ethereum transaction and routes it to an internal an
 Here, `Tx`s are handled using EthereumTx extension options to process them differently than normal Cosmos SDK transactions.
 The `antehandler` runs through a series of options and their `AnteHandle` functions for each `Tx`:
 
-- `EthSetUpContextDecorator()` is adapted from SetUpContextDecorator from cosmos-sdk,
+* `EthSetUpContextDecorator()` is adapted from SetUpContextDecorator from cosmos-sdk,
   it ignores gas consumption by setting the gas meter to infinite
-- `EthValidateBasicDecorator(evmKeeper)` validates the fields of an Ethereum type Cosmos `Tx` msg
-- `EthSigVerificationDecorator(evmKeeper)` validates that the registered chain id is the same as the one on the message,
+* `EthValidateBasicDecorator(evmKeeper)` validates the fields of an Ethereum type Cosmos `Tx` msg
+* `EthSigVerificationDecorator(evmKeeper)` validates that the registered chain id is the same as the one on the message,
   and that the signer address matches the one defined on the message.
   It's not skipped for RecheckTx, because it set `From` address which is critical from other ante handler to work.
   Failure in RecheckTx will prevent tx to be included into block, especially when CheckTx succeed,
   in which case user won't see the error message.
-- `EthAccountVerificationDecorator(ak, bankKeeper, evmKeeper)`
+* `EthAccountVerificationDecorator(ak, bankKeeper, evmKeeper)`
   will verify, that the sender balance is greater than the total transaction cost.
   The account will be set to store if it doesn't exist, i.e cannot be found on store.
   This AnteHandler decorator will fail if:
-    - any of the msgs is not a MsgEthereumTx
-    - from address is empty
-    - account balance is lower than the transaction cost
-- `EthNonceVerificationDecorator(ak)` validates that the transaction nonces are valid
+  * any of the msgs is not a MsgEthereumTx
+  * from address is empty
+  * account balance is lower than the transaction cost
+* `EthNonceVerificationDecorator(ak)` validates that the transaction nonces are valid
   and equivalent to the sender account’s current nonce.
-- `EthGasConsumeDecorator(evmKeeper)` validates that the Ethereum tx message has enough
+* `EthGasConsumeDecorator(evmKeeper)` validates that the Ethereum tx message has enough
   to cover intrinsic gas (during CheckTx only) and that the sender has enough balance to pay for the gas cost.
   Intrinsic gas for a transaction is the amount of gas that the transaction uses before the transaction is executed.
   The gas is a constant value plus any cost incurred by additional bytes of data supplied with the transaction.
   This AnteHandler decorator will fail if:
-    - the transaction contains more than one message
-    - the message is not a MsgEthereumTx
-    - sender account cannot be found
-    - transaction's gas limit is lower than the intrinsic gas
-    - user doesn't have enough balance to deduct the transaction fees (gas_limit * gas_price)
-    - transaction or block gas meter runs out of gas
-- `CanTransferDecorator(evmKeeper, feeMarketKeeper)` creates an EVM from the message
+  * the transaction contains more than one message
+  * the message is not a MsgEthereumTx
+  * sender account cannot be found
+  * transaction's gas limit is lower than the intrinsic gas
+  * user doesn't have enough balance to deduct the transaction fees (gas_limit * gas_price)
+  * transaction or block gas meter runs out of gas
+* `CanTransferDecorator(evmKeeper, feeMarketKeeper)` creates an EVM from the message
   and calls the BlockContext CanTransfer function to see if the address can execute the transaction.
-- `EthIncrementSenderSequenceDecorator(ak)`  handles incrementing the sequence of the signer (i.e sender).
+* `EthIncrementSenderSequenceDecorator(ak)`  handles incrementing the sequence of the signer (i.e sender).
   If the transaction is a contract creation, the nonce will be incremented
   during the transaction execution and not within this AnteHandler decorator.
 
@@ -737,17 +737,17 @@ type MsgEthereumTx struct {
 
 This message field validation is expected to fail if:
 
-- `From` field is defined and the address is invalid
-- `TxData` stateless validation fails
+* `From` field is defined and the address is invalid
+* `TxData` stateless validation fails
 
 The transaction execution is expected to fail if:
 
-- Any of the custom `AnteHandler` Ethereum decorators checks fail:
-    - Minimum gas amount requirements for transaction
-    - Tx sender account doesn't exist or hasn't enough balance for fees
-    - Account sequence doesn't match the transaction `Data.AccountNonce`
-    - Message signature verification fails
-- EVM contract creation (i.e `evm.Create`) fails, or `evm.Call` fails
+* Any of the custom `AnteHandler` Ethereum decorators checks fail:
+  * Minimum gas amount requirements for transaction
+  * Tx sender account doesn't exist or hasn't enough balance for fees
+  * Account sequence doesn't match the transaction `Data.AccountNonce`
+  * Message signature verification fails
+* EVM contract creation (i.e `evm.Create`) fails, or `evm.Call` fails
 
 #### Conversion
 
@@ -837,10 +837,10 @@ The `MsgEthereumTx` supports the 3 valid Ethereum transaction data types from go
 These types are defined as protobuf messages
 and packed into a `proto.Any` interface type in the `MsgEthereumTx` field.
 
-- `LegacyTx`: [EIP-155](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md) transaction type
-- `DynamicFeeTx`: [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transaction type.
+* `LegacyTx`: [EIP-155](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md) transaction type
+* `DynamicFeeTx`: [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transaction type.
   Enabled by London hard fork block
-- `AccessListTx`: [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) transaction type.
+* `AccessListTx`: [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) transaction type.
   Enabled by Berlin hard fork block
 
 ### `LegacyTx`
@@ -872,10 +872,10 @@ type LegacyTx struct {
 
 This message field validation is expected to fail if:
 
-- `GasPrice` is invalid (`nil` , negative or out of int256 bound)
-- `Fee` (gasprice * gaslimit) is invalid
-- `Amount` is invalid (negative or out of int256 bound)
-- `To` address is invalid (non valid ethereum hex address)
+* `GasPrice` is invalid (`nil` , negative or out of int256 bound)
+* `Fee` (gasprice * gaslimit) is invalid
+* `Amount` is invalid (negative or out of int256 bound)
+* `To` address is invalid (non valid ethereum hex address)
 
 ### `DynamicFeeTx`
 
@@ -911,13 +911,13 @@ type DynamicFeeTx struct {
 
 This message field validation is expected to fail if:
 
-- `GasTipCap` is invalid (`nil` , negative or overflows int256)
-- `GasFeeCap` is invalid (`nil` , negative or overflows int256)
-- `GasFeeCap` is less than `GasTipCap`
-- `Fee` (gas price * gas limit) is invalid (overflows int256)
-- `Amount` is invalid (negative or overflows int256)
-- `To` address is invalid (non-valid ethereum hex address)
-- `ChainID` is `nil`
+* `GasTipCap` is invalid (`nil` , negative or overflows int256)
+* `GasFeeCap` is invalid (`nil` , negative or overflows int256)
+* `GasFeeCap` is less than `GasTipCap`
+* `Fee` (gas price * gas limit) is invalid (overflows int256)
+* `Amount` is invalid (negative or overflows int256)
+* `To` address is invalid (non-valid ethereum hex address)
+* `ChainID` is `nil`
 
 ### `AccessListTx`
 
@@ -951,11 +951,11 @@ type AccessListTx struct {
 
 This message field validation is expected to fail if:
 
-- `GasPrice` is invalid (`nil` , negative or overflows int256)
-- `Fee` (gas price * gas limit) is invalid (overflows int256)
-- `Amount` is invalid (negative or overflows int256)
-- `To` address is invalid (non-valid ethereum hex address)
-- `ChainID` is `nil`
+* `GasPrice` is invalid (`nil` , negative or overflows int256)
+* `Fee` (gas price * gas limit) is invalid (overflows int256)
+* `Amount` is invalid (negative or overflows int256)
+* `To` address is invalid (non-valid ethereum hex address)
+* `ChainID` is `nil`
 
 ## ABCI
 
@@ -983,9 +983,9 @@ and the EVM parameters and chain configuration.
 The EVM module `BeginBlock` logic is executed prior to handling the state transitions from the transactions.
 The main objective of this function is to:
 
-- Set the context for the current block so that the block header, store, gas meter, etc.
+* Set the context for the current block so that the block header, store, gas meter, etc.
   are available to the `Keeper` once one of the `StateDB` functions are called during EVM state transitions.
-- Set the EIP-155 `ChainID` number (obtained from the full chain-id),
+* Set the EIP-155 `ChainID` number (obtained from the full chain-id),
   in case it hasn't been set before during `InitChain`
 
 ### EndBlock
@@ -993,10 +993,10 @@ The main objective of this function is to:
 The EVM module `EndBlock` logic occurs after executing all the state transitions from the transactions.
 The main objective of this function is to:
 
-- Emit Block bloom events
-    - This is due for web3 compatibility as the Ethereum headers contain this type as a field.
+* Emit Block bloom events
+  * This is due for web3 compatibility as the Ethereum headers contain this type as a field.
       The JSON-RPC service uses this event query to construct an Ethereum header from a Tendermint header.
-    - The block bloom filter value is obtained from the transient store and then emitted
+  * The block bloom filter value is obtained from the transient store and then emitted
 
 ## Hooks
 
@@ -1285,14 +1285,14 @@ NOTE: some of these EIPs are already enabled by the chain configuration, dependi
 
 The supported activateable EIPS are:
 
-- **[EIP 1344](https://eips.ethereum.org/EIPS/eip-1344)**
-- **[EIP 1884](https://eips.ethereum.org/EIPS/eip-1884)**
-- **[EIP 2200](https://eips.ethereum.org/EIPS/eip-2200)**
-- **[EIP 2315](https://eips.ethereum.org/EIPS/eip-2315)**
-- **[EIP 2929](https://eips.ethereum.org/EIPS/eip-2929)**
-- **[EIP 3198](https://eips.ethereum.org/EIPS/eip-3198)**
-- **[EIP 3529](https://eips.ethereum.org/EIPS/eip-3529)**
-- **[EIP 3855](https://eips.ethereum.org/EIPS/eip-3855)**
+* **[EIP 1344](https://eips.ethereum.org/EIPS/eip-1344)**
+* **[EIP 1884](https://eips.ethereum.org/EIPS/eip-1884)**
+* **[EIP 2200](https://eips.ethereum.org/EIPS/eip-2200)**
+* **[EIP 2315](https://eips.ethereum.org/EIPS/eip-2315)**
+* **[EIP 2929](https://eips.ethereum.org/EIPS/eip-2929)**
+* **[EIP 3198](https://eips.ethereum.org/EIPS/eip-3198)**
+* **[EIP 3529](https://eips.ethereum.org/EIPS/eip-3529)**
+* **[EIP 3855](https://eips.ethereum.org/EIPS/eip-3855)**
 
 ### Chain Config
 

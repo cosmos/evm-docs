@@ -22,7 +22,7 @@ The examples also do not include the URL/IP & port combination which must be the
 | [`web3_clientVersion`](#web3_clientversion)                                       | Web3      |            |       |                    |
 | [`web3_sha3`](#web3_sha3)                                                         | Web3      |            |       |                    |
 | [`net_version`](#net_version)                                                     | Net       |            |       |                    |
-| [`net_peerCount`](#net_peerCount)                                                 | Net       |            |       |                    |
+| [`net_peerCount`](#net_peercount)                                                 | Net       |            |       |                    |
 | [`net_listening`](#net_listening)                                                 | Net       |            |       |                    |
 | [`eth_protocolVersion`](#eth_protocolversion)                                     | Eth       |            |       |                    |
 | [`eth_syncing`](#eth_syncing)                                                     | Eth       |            |       |                    |
@@ -68,7 +68,7 @@ The examples also do not include the URL/IP & port combination which must be the
 | `eth_getUncleCountByBlockNumber`                                                  | Eth       | N/A         |        | PoW-only           |
 | `eth_getUncleByBlockHashAndIndex`                                                 | Eth       | N/A         |        | PoW-only           |
 | `eth_getUncleByBlockNumberAndIndex`                                               | Eth       | N/A         |        | PoW-only           |
-| [`eth_getProof`](#eth_getProof)                                                   | Eth       |            |        |                    |
+| [`eth_getProof`](#eth_getproof)                                                   | Eth       |            |        |                    |
 | [`eth_feeHistory`](#eth_feehistory)                                               | Eth       |            |       | EIP-1559           |
 | [`eth_maxPriorityFeePerGas`](#eth_maxpriorityfeepergas)                          | Eth       |            |       | EIP-1559           |
 | [`eth_chainId`](#eth_chainid)                                                     | Eth       |            |       |                    |
@@ -179,6 +179,7 @@ Block Number can be entered as a Hex string, `"earliest"`, ``"latest"`` or `"pen
 **EIP-1559 Support**: Cosmos EVM fully supports EIP-1559 transaction types and includes methods like `eth_feeHistory` and `eth_maxPriorityFeePerGas`.
 
 **Missing Methods**: The following methods are available in some other EVM implementations but not currently in Cosmos EVM:
+
 - `eth_createAccessList` (EIP-2930) - For creating access lists for transactions
 - Most `trace_*` methods except `trace_callMany` - Advanced tracing functionality
 - `engine_*` methods - Used for Engine API (consensus layer communication)
@@ -660,6 +661,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockHashAnd
 Returns the receipt of a transaction by transaction hash.
 
 Note: Tx Code from CometBFT and the Ethereum receipt status are switched:
+
 |         | CometBFT   | Ethereum |
 |---------|------------|----------|
 | Success | 0          | 1        |
