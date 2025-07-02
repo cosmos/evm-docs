@@ -262,7 +262,7 @@ and combine business logic with decentralized data storage.
 
 Ethereum transactions which are submitted to the `x/vm` module take part in this consensus process
 before being executed and changing the application state.
-We encourage to understand the basics of the [CometBFT consensus engine](https://docs.tendermint.com/main/introduction/what-is-tendermint.html#intro-to-abci)
+We encourage to understand the basics of the [CometBFT consensus engine](https://docs.cometbft.com/v1.0/explanation/)
 in order to understand state transitions in detail.
 
 ### Transaction Logs
@@ -593,7 +593,7 @@ and execute their containing messages to evoke state transitions on the given st
 
 Users submit transactions client-side to broadcast it to the network.
 When the transaction is included in a block during consensus, it is executed server-side.
-We highly recommend to understand the basics of the [Tendermint consensus engine](https://docs.tendermint.com/main/introduction/what-is-tendermint.html#intro-to-abci)
+We highly recommend to understand the basics of the [CometBFT consensus engine](https://docs.cometbft.com/v1.0/explanation/)
 to understand the State Transitions in detail.
 
 ### Client-Side
@@ -617,7 +617,7 @@ to understand the State Transitions in detail.
 5. The `Tx` is **built** from the msg fields using the Cosmos Config builder
 6. The `Tx` is **broadcast** in [sync mode](https://docs.cosmos.network/main/user/run-node/txs#broadcasting-a-transaction)
    to ensure to wait for
-   a [`CheckTx`](https://docs.tendermint.com/main/introduction/what-is-tendermint.html#intro-to-abci) execution response.
+   a [`CheckTx`](https://docs.cometbft.com/v1.0/tutorials/forum-application/3.send-message#checktx) execution response.
    Transactions are validated by the application using `CheckTx()`,
    before being added to the mempool of the consensus engine.
 7. JSON-RPC user receives a response with the [`RLP`](https://eth.wiki/en/fundamentals/rlp) hash of the transaction fields.
@@ -959,9 +959,9 @@ This message field validation is expected to fail if:
 
 ## ABCI
 
-The Application Blockchain Interface (ABCI) allows the application to interact with the Tendermint Consensus engine.
-The application maintains several ABCI connections with Tendermint.
-The most relevant for the  `x/vm` is the [Consensus connection at Commit](https://docs.tendermint.com/v0.33/app-dev/app-development.html#consensus-connection).
+The Application Blockchain Interface (ABCI) allows the application to interact with the CometBFT Consensus engine.
+The application maintains several ABCI connections with CometBFT.
+The most relevant for the  `x/vm` is the [Consensus connection at Commit](https://docs.cometbft.com/v1.0/spec/abci/abci++_app_requirements#consensus-connection-requirements).
 This connection is responsible for block execution and calls the functions `InitChain`
 (containing `InitGenesis`), `BeginBlock`, `DeliverTx`, `EndBlock`, `Commit` .
 `InitChain` is only called the first time a new blockchain is started
@@ -995,7 +995,7 @@ The main objective of this function is to:
 
 * Emit Block bloom events
   * This is due for web3 compatibility as the Ethereum headers contain this type as a field.
-      The JSON-RPC service uses this event query to construct an Ethereum header from a Tendermint header.
+      The JSON-RPC service uses this event query to construct an Ethereum header from a CometBFT header.
   * The block bloom filter value is obtained from the transient store and then emitted
 
 ## Hooks
@@ -1213,7 +1213,7 @@ The EVM module emits events of the relevant transaction fields, as well as the t
 | ethereum_tx | `"amount"`         | `{amount}`              |
 | ethereum_tx | `"recipient"`      | `{hex_address}`         |
 | ethereum_tx | `"contract"`       | `{hex_address}`         |
-| ethereum_tx | `"txHash"`         | `{tendermint_hex_hash}` |
+| ethereum_tx | `"txHash"`         | `{hex_hash}` |
 | ethereum_tx | `"ethereumTxHash"` | `{hex_hash}`            |
 | ethereum_tx | `"txIndex"`        | `{tx_index}`            |
 | ethereum_tx | `"txGasUsed"`      | `{gas_used}`            |
@@ -1362,8 +1362,8 @@ A user can query and interact with the `evm` module using the CLI, JSON-RPC, gRP
 
 ### CLI
 
-Find below a list of `evmd` commands added with the `x/vm` module.
-You can obtain the full list by using the `evmd -h` command.
+Find below a list of `appd` commands added with the `x/vm` module.
+You can obtain the full list by using the `appd -h` command.
 
 #### Queries
 
@@ -1374,12 +1374,12 @@ The `query` commands allow users to query `evm` state.
 Allows users to query the smart contract code at a given address.
 
 ```bash
-evmd query evm code ADDRESS [flags]
+appd query evm code ADDRESS [flags]
 ```
 
 ```bash
 # Example
-$ evmd query evm code 0x7bf7b17da59880d9bcca24915679668db75f9397
+$ appd query evm code 0x7bf7b17da59880d9bcca24915679668db75f9397
 
 # Output
 code: "0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb5735e11e7d3adb6104e0c3ac55180b4ddf5e54d022cc5e8837f6a4f971b"
@@ -1390,12 +1390,12 @@ code: "0xef616c92f3cfc9e92dc270d6acff9cea213cecc7020a76ee4395af09bdceb4837a1ebdb
 Allows users to query storage for an account with a given key and height.
 
 ```bash
-evmd query evm storage ADDRESS KEY [flags]
+appd query evm storage ADDRESS KEY [flags]
 ```
 
 ```bash
 # Example
-$ evmd query evm storage 0x0f54f47bf9b8e317b214ccd6a7c3e38b893cd7f0 0 --height 0
+$ appd query evm storage 0x0f54f47bf9b8e317b214ccd6a7c3e38b893cd7f0 0 --height 0
 
 # Output
 value: "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -1410,12 +1410,12 @@ The `tx` commands allow users to interact with the `evm` module.
 Allows users to build cosmos transactions from raw ethereum transaction.
 
 ```bash
-evmd tx evm raw TX_HEX [flags]
+appd tx evm raw TX_HEX [flags]
 ```
 
 ```bash
 # Example
-$ evmd tx evm raw 0xf9ff74c86aefeb5f6019d77280bbb44fb695b4d45cfe97e6eed7acd62905f4a85034d5c68ed25a2e7a8eeb9baf1b84
+$ appd tx evm raw 0xf9ff74c86aefeb5f6019d77280bbb44fb695b4d45cfe97e6eed7acd62905f4a85034d5c68ed25a2e7a8eeb9baf1b84
 
 # Output
 value: "0x0000000000000000000000000000000000000000000000000000000000000000"

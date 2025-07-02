@@ -185,7 +185,7 @@ Block Number can be entered as a Hex string, `"earliest"`, ``"latest"`` or `"pen
 - `engine_*` methods - Used for Engine API (consensus layer communication)
 - `parity_*` methods - Parity/OpenEthereum specific methods
 
-**No-op Methods**: Some miner namespace methods return success but don't perform any action as Cosmos EVM uses Tendermint consensus instead of PoW mining.
+**No-op Methods**: Some miner namespace methods return success but don't perform any action as Cosmos EVM uses cometbft consensus instead of PoW mining.
 :::
 
 Below is a list of the RPC methods, the parameters and an example response from the namespaces.
@@ -302,8 +302,8 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_protocolVersion","params":[]
 
 ### `eth_syncing`
 
-The sync status object may need to be different depending on the details of Tendermint's sync protocol.
-However, the 'synced' result is simply a boolean, and can easily be derived from Tendermint's internal sync state.
+The sync status object may need to be different depending on the details of cometbft's sync protocol.
+However, the 'synced' result is simply a boolean, and can easily be derived from cometbft's internal sync state.
 
 ```json
 // Request
@@ -834,7 +834,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"eth_getProof","params":["0x12345
 
 ## WebSocket Methods
 
-Read about websockets in [Tendermint Events](../tendermint-rpc.md)
+Read about websockets in [cometbft Events](../cometbft-rpc.md)
 
 ### `eth_subscribe`
 
@@ -1223,7 +1223,7 @@ Any transaction below this limit is excluded from the validator block proposal p
 
 This method requires a `node` restart after being called because it changes the configuration file.
 
-Make sure your `evmd start` call is not using the flag `minimum-gas-prices`,
+Make sure your `appd start` call is not using the flag `minimum-gas-prices`,
 because this value will be used instead of the one set on the configuration file.
 
 #### Parameters

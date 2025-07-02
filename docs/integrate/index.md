@@ -9,7 +9,8 @@ displayed_sidebar: null
 These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate repositories. If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out through [this form](https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca).
 :::
 
-This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your existing Cosmos SDK blockchain. Big thanks to Reece & the [Spawn](https://github.com/rollchains/spawn) team for their valuable contributions to this page.
+This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these instructions carefully to add Ethereum Virtual Machine functionality to your deployment plan. Big thanks to Reece & the [Spawn](https://github.com/rollchains/spawn) team for their valuable contributions to this page.
+
 
 This guide is specifically designed for chains that haven't launched yet. If you're building a new Cosmos SDK chain and want to include EVM compatibility from the start, these instructions will walk you through the process step by step.
 
@@ -27,6 +28,10 @@ Detailed instructions for upgrading existing chains are still in development and
 - IBC-Go v8
 - Go 1.23+ installed
 - Basic knowledge of Go and Cosmos SDK
+
+## Notes
+
+- `appd` simply refers to the relevant chain binary (gaiad for example)
 
 ## Step 1: Update Dependencies in go.mod
 
@@ -65,7 +70,7 @@ Configure both Cosmos and EVM chain IDs separately:
 
 - Cosmos Chain ID can be any standard Cosmos chain ID format (e.g., `"mychain-1"`)
 - EVM Chain ID must be an integer following EIP-155 (e.g., `9000`)
-- The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/029ed3b60088ca698de6714e9615971a85f606fb/evmd/cmd/evmd/config/config.go#L56)
+- The EVM chain ID is configured in the [EVM module configuration](https://github.com/cosmos/evm/blob/e6fe094b61c5cc4770defe0b1a7eb543abbe17cb/evmd/cmd/evmd/config/config.go#L56)
 
 :::note
 Make sure to confirm your chain-id is not already taken by referring
@@ -317,17 +322,17 @@ Once your relayer is running, test IBC transfers to verify the automatic ERC20 r
 
 ```bash
 # From source chain
-gaiad tx ibc-transfer transfer transfer channel-0 cosmos1... 1000uatom --from wallet
+gaiad tx ibc-transfer transfer transfer channel-0 cosmos1... 1000ustake --from wallet
 ```
 
 2. Verify the IBC token was received and ERC20 was auto-registered:
 
 ```bash
 # Check balance on Cosmos EVM chain
-evmd query bank balances cosmos1...
+appd query bank balances cosmos1...
 
 # Check if ERC20 token pair was created
-evmd query erc20 token-pairs
+appd query erc20 token-pairs
 ```
 
 3. Interact with the auto-generated ERC20 contract through MetaMask or web3 tools.
@@ -993,7 +998,7 @@ func (app *ChainApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 
 Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all relevant files.
 
-`NewChainApp` Callsites: Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/evmd/commands.go`, `cmd/evmd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
+`NewChainApp` Callsites: Ensure all test files (`app/test_helpers.go`, `app/app_test.go`, `interchaintest/*`) and command files (`cmd/appd/commands.go`, `cmd/appd/root.go`) pass the `app.EVMAppOptions` function when calling `NewChainApp`.
 
 - Example (`app/test_helpers.go`):
 
@@ -1010,7 +1015,7 @@ Make sure the `EVMAppOptions` parameter is passed to `NewChainApp` in all releva
     }
     ```
 
-- Example (`cmd/evmd/commands.go`):
+- Example (`cmd/appd/commands.go`):
 
     ```go
     func newApp( /* ... */ ) servertypes.Application {
@@ -1273,7 +1278,7 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 
 ## Step 11: Update Command Files
 
-Apply these changes to your chain's command files `cmd/evmd/commands.go`:
+Apply these changes to your chain's command files `cmd/appd/commands.go`:
 
 ```go
 // Add imports
@@ -1359,7 +1364,7 @@ func init() {
 
 **Important:** The EVM chain ID needs to be properly initialized in your root.go. See the [Cosmos EVM reference implementation](https://github.com/cosmos/evm/blob/0e511d32206b1ac709a0eb0ddb1aa21d29e833b8/cmd/evmd/cmd/root.go#L136-L157) for details on chain ID initialization.
 
-Update `cmd/evmd/root.go`:
+Update `cmd/appd/root.go`:
 
 ```go
 import (

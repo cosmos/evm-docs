@@ -99,7 +99,7 @@ that a transaction is willing to provide.
 It is derived from the transaction arguments and the base fee parameter.
 Depending on which one is smaller, the effective gas price is either the `baseFee + tip` or the `gasFeeCap`
 
-```sh
+```golang
 min(baseFee + gasTipCap, gasFeeCap)
 ```
 
@@ -154,7 +154,7 @@ Only BlockGasUsed in previous block needs to be tracked in state for the next ba
 
 ## Begin block
 
-**Note:** Base fee calculation has been moved to End Block to comply with EIP-1559 specifications. The logic described here now executes at the end of each block.
+**Note:** Base fee calculation has been moved to `EndBlock` to comply with EIP-1559 specifications. The logic described here now executes at the end of each block.
 
 ### Base Fee
 
@@ -217,7 +217,7 @@ The `block_gas_used` value is updated at the end of each block.
 
 The total gas used by current block is stored in the KVStore at `EndBlock`.
 
-It is initialized to `block_gas` defined in the genesis.
+It is initialized to `block_gas`, defined in the genesis.
 
 ## Keeper
 
@@ -271,7 +271,7 @@ A user can query and interact with the `feemarket` module using the CLI.
 The `query` commands allow users to query `feemarket` state.
 
 ```bash
-evmd query feemarket --help
+appd query feemarket --help
 ```
 
 ##### Base Fee
@@ -279,13 +279,13 @@ evmd query feemarket --help
 The `base-fee` command allows users to query the block base fee by height.
 
 ```bash
-evmd query feemarket base-fee [flags]
+appd query feemarket base-fee [flags]
 ```
 
 Example:
 
 ```bash
-evmd query feemarket base-fee ...
+appd query feemarket base-fee ...
 ```
 
 Example Output:
@@ -299,13 +299,13 @@ base_fee: "512908936"
 The `block-gas` command allows users to query the block gas by height.
 
 ```bash
-evmd query feemarket block-gas [flags]
+appd query feemarket block-gas [flags]
 ```
 
 Example:
 
 ```bash
-evmd query feemarket block-gas ...
+appd query feemarket block-gas ...
 ```
 
 Example Output:
@@ -319,13 +319,13 @@ gas: "21000"
 The `params` command allows users to query the module params.
 
 ```bash
-evmd query params subspace [subspace] [key] [flags]
+appd query params subspace [subspace] [key] [flags]
 ```
 
 Example:
 
 ```bash
-evmd query params subspace feemarket ElasticityMultiplier ...
+appd query params subspace feemarket ElasticityMultiplier ...
 ```
 
 Example Output:

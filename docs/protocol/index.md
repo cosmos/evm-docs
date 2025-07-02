@@ -6,7 +6,7 @@ sidebar_position: 0
 
 Cosmos EVM is a framework that allows you to add Ethereum Virtual Machine (EVM) compatibility to any Cosmos SDK-based chain.
 It is built using the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk/)
-which runs on top of the [CometBFT](https://github.com/cometbft/cometbft)
+which runs on top of the [CometBFT](https://docs.cometbft.com/v1.0/)
 (a fork of [Tendermint Core](https://docs.tendermint.com/)) consensus engine,
 to accomplish fast finality, high transaction throughput and short block times (~2 seconds).
 
@@ -18,7 +18,7 @@ Cosmos EVM enables these key features by:
 
 * Leveraging [modules](https://docs.cosmos.network/v0.47/build/building-modules/intro)
 and other mechanisms implemented by the [Cosmos SDK](https://docs.cosmos.network/).
-* Implementing CometBFT's Application Blockchain Interface ([ABCI](https://docs.tendermint.com/master/spec/abci/))
+* Implementing CometBFT's Application Blockchain Interface ([ABCI](https://docs.cometbft.com/v1.0/spec/abci/))
 to manage the blockchain.
 * Utilizing [`geth`](https://github.com/ethereum/go-ethereum) as a library to promote code reuse and improve maintainability.
 * Exposing a fully compatible Web3 [JSON-RPC](./../develop/api/ethereum-json-rpc/methods) layer
@@ -40,7 +40,7 @@ Check out the [list of modules](modules/index.md) to get an overview of what eac
 a blockchain consensus engine and a generic application interface.
 The consensus engine ensures that the same transactions
 are recorded on every machine in the same order.
-The application interface, called the [Application Blockchain Interface (ABCI)](https://docs.tendermint.com/master/spec/abci/),
+The application interface, called the [Application Blockchain Interface (ABCI)](https://docs.cometbft.com/v1.0/spec/abci/),
 enables the transactions to be processed in any programming language.
 
 CometBFT has evolved to be a general-purpose blockchain consensus engine that

@@ -75,7 +75,7 @@ The Ethereum Websocket allows you to subscribe to Ethereum logs and events emitt
 don't need to continuously make requests when you want specific information.
 
 Since Cosmos EVM is built with the Cosmos SDK framework and uses CometBFT as it's consensus Engine, it inherits the
-[event format](./tendermint-rpc#subscribing-to-cosmos-and-cometbft-events) from them. However, in order to support the
+[event format](./cometbft-rpc#subscribing-to-cosmos-and-cometbft-events) from them. However, in order to support the
 native Web3 compatibility for websockets of the [Ethereum's PubSubAPI](https://geth.ethereum.org/docs/interacting-with-geth/rpc/pubsub),
 Cosmos EVM needs to cast the CometBFT responses retrieved into the Ethereum types.
 
@@ -83,7 +83,7 @@ You can start a connection with the Ethereum websocket using the `--json-rpc.ws-
 the node (default `"0.0.0.0:8546"`):
 
 ```bash
-evmd start --json-rpc.address="0.0.0.0:8545" --json-rpc.ws-address="0.0.0.0:8546" --json-rpc.api="eth,web3,net,txpool,debug" --json-rpc.enable
+appd start --json-rpc.address="0.0.0.0:8545" --json-rpc.ws-address="0.0.0.0:8546" --json-rpc.api="eth,web3,net,txpool,debug" --json-rpc.enable
 ```
 
 Then, start a websocket subscription with [`ws`](https://github.com/hashrocket/ws)

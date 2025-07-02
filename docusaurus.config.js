@@ -56,7 +56,7 @@ const config = {
       name: "Cosmos EVM",
       denom: "stake",
       ticker: "STAKE",
-      binary: "evmd",
+      binary: "appd",
       testnet_denom: "tStake",
       testnet_ticker: "tSTAKE",
       rpc_url: "",

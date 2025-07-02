@@ -6,14 +6,7 @@ sidebar_position: 4
 
 The CometBFT RPC allows you to query transactions, blocks, consensus state, broadcast transactions, etc.
 
-The latest CometBFT RPC documentations can be found [here](https://docs.tendermint.com/v0.34/rpc/). CometBFT
-supports the following RPC protocols:
-
-- URI over HTTP
-- JSON-RPC over HTTP
-- JSON-RPC over Websockets
-
-The docs will contain an interactive Swagger interface.
+Complete documentation including a swagger interface can be found [here](https://docs.cometbft.com/v1.0/rpc/).
 
 ## URI/HTTP
 
@@ -35,7 +28,7 @@ of supported CometBFT RPC endpoints using Swagger [here](../api#clients).
 `Event`s are objects that contain information about the execution of the application
 and are triggered after a block is committed. They are mainly used by service providers
 like block explorers and wallet to track the execution of various messages and index transactions.
-You can get the full list of `event` categories and values [here](#list-of-tendermint-events).
+You can get the full list of `event` categories and values [here](#list-of-cometbft-events).
 
 More on Events:
 
@@ -43,23 +36,23 @@ More on Events:
 
 ### Subscribing to Events via Websocket
 
-CometBFT provides a [Websocket](https://docs.tendermint.com/v0.34/tendermint-core/subscription.html) connection
+CometBFT provides a [Websocket](https://docs.cometbft.com/v1.0/explanation/core/subscription) connection
 to subscribe or unsubscribe to CometBFT `Events`.
 To start a connection with the CometBFT websocket you need to
 define the address with the `--rpc.laddr` flag when starting the node
 (default `tcp://127.0.0.1:26657`):
 
 ```bash
-evmd start --rpc.laddr="tcp://127.0.0.1:26657"
+appd start --rpc.laddr="tcp://127.0.0.1:26657"
 ```
 
 Then, start a websocket subscription with [ws](https://github.com/hashrocket/ws)
 
 ```bash
-# connect to tendermint websocket at port 8080
+# connect to cometbft websocket at port 8080
 ws ws://localhost:8080/websocket
 
-# subscribe to new Tendermint block headers
+# subscribe to new cometbft block headers
 > { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='NewBlockHeader'"], "id": 1 }
 ```
 
@@ -93,7 +86,7 @@ The generic syntax looks like this:
 }
 ```
 
-### List of Tendermint Events
+### List of cometbft Events
 
 The main events you can subscribe to are:
 
@@ -107,7 +100,7 @@ can be found in the [Modules Specification](./../../../../protocol/modules/) sec
 Check the `Events` page to obtain the event list of each supported module in Cosmos EVM.
 :::
 
-List of all Tendermint event keys:
+List of all cometbft event keys:
 
 |                                                      | Event Type       | Categories  |
 | ---------------------------------------------------- | ---------------- | ----------- |
