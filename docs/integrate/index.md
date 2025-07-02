@@ -108,7 +108,7 @@ While optional, changing from 6 decimals (Cosmos convention) to 18 decimals (EVM
 If you choose to use 18 decimals:
 
 - `app/app.go`: `const BaseDenomUnit int64 = 18`
-- `chain_registry_assets.json`:
+- `@cosmos/chain-resgisstry/<your-chain>/assets.json`: [link](https://github.com/cosmos/chain-registry)
 
 ```json
             {
