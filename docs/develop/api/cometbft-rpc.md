@@ -34,46 +34,67 @@ More on Events:
 
 - [Cosmos SDK Events](https://docs.cosmos.network/main/learn/advanced/events)
 
-### Subscribing to Events via Websocket
+## Subscribing to Events via WebSocket in CometBFT
 
-CometBFT provides a [Websocket](https://docs.cometbft.com/v1.0/explanation/core/subscription) connection
-to subscribe or unsubscribe to CometBFT `Events`.
-To start a connection with the CometBFT websocket you need to
-define the address with the `--rpc.laddr` flag when starting the node
-(default `tcp://127.0.0.1:26657`):
+CometBFT provides a WebSocket connection that allows you to subscribe to and unsubscribe from various blockchain events in real-time. This is a powerful tool for monitoring chain activity and building event-driven applications.
+
+-----
+
+### Prerequisites
+
+  * **CometBFT Node**: You need a running CometBFT node with its RPC WebSocket enabled.
+  * **`ws` tool**: A command-line WebSocket client. If you don't have it, you can install it via npm:
+    ```bash
+    npm i -g ws
+    ```
+
+-----
+
+### Configuring the WebSocket RPC Endpoint
+
+By default, the CometBFT RPC WebSocket listens on `tcp://127.0.0.1:26657`. If you need to change this, you can define the address using the `--rpc.laddr` flag when starting your node:
 
 ```bash
 appd start --rpc.laddr="tcp://127.0.0.1:26657"
 ```
 
-Then, start a websocket subscription with [ws](https://github.com/hashrocket/ws)
+-----
 
-```bash
-# connect to cometbft websocket at port 8080
-ws ws://localhost:8080/websocket
+### Subscribing to Events
 
-# subscribe to new cometbft block headers
-> { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='NewBlockHeader'"], "id": 1 }
-```
+1.  **Connect to the CometBFT WebSocket**:
+    Use the `ws` command to establish a connection to your node's WebSocket endpoint.
 
-The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are
-looking for. For example, an Ethereum transaction on a Cosmos EVM chain (`MsgEthereumTx`) triggers an `event` of type
-`ethermint` and has `sender` and `recipient` as `attributes`. Subscribing to this `event` would be done like so:
+    ```bash
+    ws ws://localhost:26657/websocket
+    ```
 
-```json
-{
-    "jsonrpc": "2.0",
-    "method": "subscribe",
-    "id": "0",
-    "params": {
-        "query": "tm.event='Tx' AND ethereum.recipient='hexAddress'"
-    }
-}
-```
+    Once connected, you'll see your prompt ready to accept input (e.g., ` >  `).
 
-where `hexAddress` is an Ethereum hex address (eg: `0x1122334455667788990011223344556677889900`).
+2.  **Send a Subscription Request**:
+    To subscribe to a specific event, send a JSON-RPC request with the `"method": "subscribe"` and a `"query"` parameter. The `query` uses a specific syntax to filter events.
 
-The generic syntax looks like this:
+    For example, to subscribe to `NewBlockHeader` events (which fire when a new block header is committed):
+
+    ```json
+    { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='NewBlockHeader'"], "id": 1 }
+    ```
+
+    Paste this JSON into your `ws` terminal and press Enter. You should receive a confirmation like:
+
+    ```json
+    { "jsonrpc": "2.0", "id": 1, "result": {} }
+    ```
+
+    Your terminal will now display incoming `NewBlockHeader` events as they occur.
+
+-----
+
+### Filtering Events with `query`
+
+The `query` parameter in your subscription request allows for granular filtering of events. You can combine an `Event Type` with specific `Event Attributes` to narrow down the events you receive.
+
+The generic syntax for the `query` is:
 
 ```json
 {
@@ -86,94 +107,119 @@ The generic syntax looks like this:
 }
 ```
 
-### List of cometbft Events
+**Example: Subscribing to specific Ethereum transactions on a Cosmos EVM chain**
 
-The main events you can subscribe to are:
-
-- `NewBlock`: Contains `events` triggered during `BeginBlock` and `EndBlock`.
-- `Tx`: Contains `events` triggered during `DeliverTx` (i.e. transaction processing).
-- `ValidatorSetUpdates`: Contains validator set updates for the block.
-
-:::tip
- The list of events types and values for each Cosmos SDK module
-can be found in the [Modules Specification](./../../../../protocol/modules/) section.
-Check the `Events` page to obtain the event list of each supported module in Cosmos EVM.
-:::
-
-List of all cometbft event keys:
-
-|                                                      | Event Type       | Categories  |
-| ---------------------------------------------------- | ---------------- | ----------- |
-| Subscribe to a specific event                        | `"tm.event"`     | `block`     |
-| Subscribe to a specific transaction                  | `"tx.hash"`      | `block`     |
-| Subscribe to transactions at a specific block height | `"tx.height"`    | `block`     |
-| Index `BeginBlock` and `Endblock` events             | `"block.height"` | `block`     |
-| Subscribe to ABCI `BeginBlock` events                | `"begin_block"`  | `block`     |
-| Subscribe to ABCI `EndBlock` events                  | `"end_block"`    | `consensus` |
-
-Below is a list of values that you can use to subscribe for the `tm.event` type:
-
-|                        | Event Value             | Categories  |
-| ---------------------- | ----------------------- | ----------- |
-| New block              | `"NewBlock"`            | `block`     |
-| New block header       | `"NewBlockHeader"`      | `block`     |
-| New Byzantine Evidence | `"NewEvidence"`         | `block`     |
-| New transaction        | `"Tx"`                  | `block`     |
-| Validator set updated  | `"ValidatorSetUpdates"` | `block`     |
-| Block sync status      | `"BlockSyncStatus"`     | `consensus` |
-| lock                   | `"Lock"`                | `consensus` |
-| New consensus round    | `"NewRound"`            | `consensus` |
-| Polka                  | `"Polka"`               | `consensus` |
-| Relock                 | `"Relock"`              | `consensus` |
-| State sync status      | `"StateSyncStatus"`     | `consensus` |
-| Timeout propose        | `"TimeoutPropose"`      | `consensus` |
-| Timeout wait           | `"TimeoutWait"`         | `consensus` |
-| Unlock                 | `"Unlock"`              | `consensus` |
-| Block is valid         | `"ValidBlock"`          | `consensus` |
-| Consensus vote         | `"Vote"`                | `consensus` |
-
-### Example
-
-```bash
-ws ws://localhost:26657/websocket
-> { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='ValidatorSetUpdates'"], "id": 1 }
-```
-
-Example response:
+If you're on a Cosmos EVM chain, `MsgEthereumTx` transactions trigger an `ethermint` event. You can filter these events by `sender` or `recipient` attributes. To subscribe to transactions where the `ethereum.recipient` is a specific hex address (e.g., `0x1122334455667788990011223344556677889900`):
 
 ```json
 {
     "jsonrpc": "2.0",
-    "id": 0,
-    "result": {
-        "query": "tm.event='ValidatorSetUpdates'",
-        "data": {
-            "type": "tendermint/event/ValidatorSetUpdates",
-            "value": {
-              "validator_updates": [
-                {
-                  "address": "09EAD022FD25DE3A02E64B0FE9610B1417183EE4",
-                  "pub_key": {
-                    "type": "tendermint/PubKeyEd25519",
-                    "value": "ww0z4WaZ0Xg+YI10w43wTWbBmM3dpVza4mmSQYsd0ck="
-                  },
-                  "voting_power": "10",
-                  "proposer_priority": "0"
-                }
-              ]
-            }
-        }
+    "method": "subscribe",
+    "id": "0",
+    "params": {
+        "query": "tm.event='Tx' AND ethereum.recipient='0x1122334455667788990011223344556677889900'"
     }
 }
 ```
 
+-----
+
+### Common CometBFT Events and Attributes
+
+Here's a breakdown of key event types and their common uses for subscription:
+
+#### Main Event Types (`tm.event` values)
+
+These values are used with `tm.event='<Event Value>'`:
+
+| Event Value             | Description                              | Categories  |
+| :---------------------- | :--------------------------------------- | :---------- |
+| `"NewBlock"`            | Contains events triggered during `BeginBlock` and `EndBlock`. | `block`     |
+| `"NewBlockHeader"`      | Provides only the header of a new block. | `block`     |
+| `"Tx"`                  | Contains events triggered during `DeliverTx` (i.e., transaction processing). | `block`     |
+| `"ValidatorSetUpdates"` | Contains validator set updates for the block. | `block`     |
+| `"NewEvidence"`         | Indicates new Byzantine evidence.        | `block`     |
+| `"BlockSyncStatus"`     | Provides information about block synchronization status. | `consensus` |
+| `"Lock"`                | Consensus: lock event.                   | `consensus` |
+| `"NewRound"`            | Consensus: new round started.            | `consensus` |
+| `"Polka"`               | Consensus: Polka event.                  | `consensus` |
+| `"Relock"`              | Consensus: relock event.                 | `consensus` |
+| `"StateSyncStatus"`     | Provides information about state synchronization status. | `consensus` |
+| `"TimeoutPropose"`      | Consensus: timeout for propose.          | `consensus` |
+| `"TimeoutWait"`         | Consensus: timeout for waiting.          | `consensus` |
+| `"Unlock"`              | Consensus: unlock event.                 | `consensus` |
+| `"ValidBlock"`          | Consensus: block is valid.               | `consensus` |
+| `"Vote"`                | Consensus: vote event.                   | `consensus` |
+
+#### Event Keys for Broader Filtering
+
+These event keys can be used directly in the `query` (e.g., `tx.hash='<hash_value>'`):
+
+| Event Key          | Description                                      | Categories |
+| :----------------- | :----------------------------------------------- | :--------- |
+| `"tm.event"`       | Subscribe to a specific event (e.g., `NewBlock`). | `block`    |
+| `"tx.hash"`        | Subscribe to a specific transaction by its hash. | `block`    |
+| `"tx.height"`      | Subscribe to transactions at a specific block height. | `block`    |
+| `"block.height"`   | Index `BeginBlock` and `EndBlock` events.      | `block`    |
+| `"begin_block"`    | Subscribe to ABCI `BeginBlock` events.         | `block`    |
+| `"end_block"`      | Subscribe to ABCI `EndBlock` events.           | `consensus`|
+
 :::tip
-**Note:** When querying Ethereum transactions versus Cosmos transactions, the transaction hashes are different.
-When querying Ethereum transactions, users need to use event query.
-Here's an example with the CLI:
-
-```bash
-curl -X GET "http://localhost:26657/tx_search?query=ethereum_tx.ethereumTxHash%3D0x8d43464891fac6c113e809e14dff1a3e608eae124d629799e42ca0e36562d9d7&prove=false&page=1&per_page=30&order_by=asc" -H "accept: application/json"
-```
-
+For a comprehensive list of event types and values for each Cosmos SDK module, refer to the [suspicious link removed] section in the official documentation. Specifically, check the `Events` page for each supported module to obtain the full event list for Cosmos EVM.
 :::
+
+-----
+
+### Example: Subscribing to Validator Set Updates
+
+Let's illustrate with an example to subscribe to `ValidatorSetUpdates`. This event is triggered when there are changes to the validator set for a block.
+
+1.  **Connect to the WebSocket**:
+
+    ```bash
+    ws ws://localhost:26657/websocket
+    ```
+
+2.  **Send the Subscription Request**:
+
+    ```json
+    > { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='ValidatorSetUpdates'"], "id": 1 }
+    ```
+
+3.  **Example Response (truncated for brevity)**:
+    When a validator set update occurs, you'll receive a JSON response similar to this:
+
+    ```json
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+            "query": "tm.event='ValidatorSetUpdates'",
+            "data": {
+                "type": "tendermint/event/ValidatorSetUpdates",
+                "value": {
+                  "validator_updates": [
+                    {
+                      "address": "09EAD022FD25DE3A02E64B0FE9610B1417183EE4",
+                      "pub_key": {
+                        "type": "tendermint/PubKeyEd25519",
+                        "value": "ww0z4WaZ0Xg+YI10w43wTWbBmM3dpVza4mmSQYsd0ck="
+                      },
+                      "voting_power": "10",
+                      "proposer_priority": "0"
+                    }
+                  ]
+                }
+            }
+        }
+    }
+    ```
+
+    This response indicates that the validator set has been updated, providing details about the changes (e.g., an updated validator `address`, `pub_key`, and `voting_power`).
+
+:::tip
+**Important Note on Transaction Hashes:**
+When querying Ethereum transactions on a Cosmos EVM chain, remember that their transaction hashes will differ from standard Cosmos transactions. For Ethereum transactions, you'll typically need to use event queries with specific attributes (like `ethereum.recipient` as shown above) rather than `tx.hash`.
+:::
+
+-----
