@@ -42,6 +42,10 @@ and their respective curl commands on the [JSON-RPC Methods](./methods.md) page.
 | `admin`                                                    | The `admin` API gives you access to several non-standard RPC methods, which will allow you to have a fine grained control over your node instance, including but not limited to network peer and RPC endpoint management.    |          |                    |
 | [`personal`](./ethereum-json-rpc/methods#personal-methods) | The `personal` API manages private keys in the key store.                                                                                                                                                                    |          |                   |
 
+:::warning
+You should only expose the debug endpoint in non production settings as it could impact network performance and uptime under certain conditions.
+:::
+
 ## Subscribing to Ethereum Events
 
 ### Filters

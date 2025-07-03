@@ -69,6 +69,10 @@ Key flags:
 - `--json-rpc.ws-address`: JSON-RPC WebSocket server address (default: `0.0.0.0:8546`)
 - `--json-rpc.api`: API namespaces to enable (e.g., `eth,web3,net,txpool,debug`)
 
+:::warning
+You should only expose the debug endpoint in non production settings as it could impact network performance and uptime under certain conditions.
+:::
+
 #### `init`
 
 Initialize private validator, p2p, genesis, and application configuration files.
