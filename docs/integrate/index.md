@@ -1,44 +1,39 @@
-  Converting a Cosmos SDK Chain to an EVM Chain: Step-by-Step Guide
+# Converting a Cosmos SDK Chain to an EVM Chain
 
   :::note
-  These documents are in maintenance, due to the recent migration from evmOS to the maintenance of this fork by the
-  Interchain Labs team. The team is working on updating stale or old references, and re-link to the appropriate
-  repositories. If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out through
-  https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca.
+  These documents reference software in actve development. Due to the recent migration from evmOS to the maintenance of this fork by the Interchain Labs team. If you see anything that seems inaccurate or that you feel is missing, please use the feedback form on the bottom of each page.
   :::
 
-  This guide provides detailed steps to convert a standard Cosmos SDK chain into an EVM-compatible chain. Follow these
-  instructions carefully to add Ethereum Virtual Machine functionality to your deployment plan. Big thanks to Reece &
-  the https://github.com/rollchains/spawn team for their valuable contributions to this page.
+  Big thanks to Reece & the <https://github.com/rollchains/spawn> team for their valuable contributions to this page.
 
-  This guide is specifically designed for chains that haven't launched yet. If you're building a new Cosmos SDK chain
-  and want to include EVM compatibility from the start, these instructions will walk you through the process step by
-  step.
+  This material provides guidance on key areas when converting a standard Cosmos SDK chain into an EVM-compatible chain. It is specifically targeted at building a new Cosmos SDK chain with EVM compatibility from the start.
 
-  ⚠️ For chains that are already live, adding EVM compatibility is more complex and involves significant considerations:
+  ⚠️ For chains that are already live, adding EVM compatibility is more complex and involves additional and significant considerations.
+  If you'd like to get in touch with a Cosmos EVM expert at Interchain Labs, please reach out through
+  <https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca>.
 
-  - Account system changes that may require address migration or mapping between Cosmos and Ethereum address formats.
-  - Token decimal changes (from Cosmos standard 6 to Ethereum standard 18) that impact all existing balances and
+- Account system changes that may require address migration or mapping between Cosmos and Ethereum address formats.
+- Token decimal changes (from Cosmos standard 6 to Ethereum standard 18) that impact all existing balances and
   tokenomics.
-  - Asset migration where existing assets need to be initialized and mirrored in the EVM.
+- Asset migration where existing assets need to be initialized and mirrored in the EVM.
 
   Detailed instructions for upgrading existing chains are still in development and will be provided in a future guide.
 
   Prerequisites
 
-  - A working Cosmos SDK chain on v0.50.x
-  - IBC-Go v8
-  - Go 1.23+ installed
-  - Basic knowledge of Go and Cosmos SDK
+- A working Cosmos SDK chain on v0.53.x
+- IBC-Go v10
+- Go 1.23+ installed
+- Basic knowledge of Go and Cosmos SDK
 
   Version Compatibility
 
   For production deployments, we recommend using these specific versions to ensure compatibility:
 
   require (
-      github.com/cosmos/cosmos-sdk v0.50.13
-      github.com/cosmos/ibc-go/v8 v8.7.0
-      github.com/cosmos/evm v0.2.0
+      github.com/cosmos/cosmos-sdk v0.53.0
+      github.com/cosmos/ibc-go/v10 v10.2.0
+      github.com/cosmos/evm v0.3.0
   )
 
   replace (
@@ -48,26 +43,18 @@
 
   Notes
 
-  - appd refers to your specific chain's binary (e.g., gaiad, dydxd, etc.).
+- appd refers to your specific chain's binary (e.g., gaiad, dydxd, etc.).
 
   Step 1: Update Dependencies in go.mod
 
   // import modules
   require (
-      github.com/cosmos/cosmos-sdk v0.50.13
-      github.com/ethereum/go-ethereum v1.10.26
+      github.com/cosmos/cosmos-sdk v0.53.0
+      github.com/ethereum/go-ethereum v1.15.10
 
       // for ibc functionality in EVM
-      github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.1.1
       github.com/cosmos/ibc-go/modules/capability v1.0.1
-      github.com/cosmos/ibc-go/v8 v8.7.0
-  )
-
-  // Add module replacements
-  replace (
-      cosmossdk.io/store => github.com/cosmos/cosmos-sdk/store v1.1.2-0.20250319183239-53dea340efc7
-      github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.50.13-0.20250319183239-53dea340efc7
-      github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
+      github.com/cosmos/ibc-go/v10 v10.2.0
   )
 
   Step 2: Update Chain Configuration
@@ -78,34 +65,34 @@
 
   Cosmos EVM requires two separate chain IDs:
 
-  - Cosmos Chain ID (string): Used for interactions through the CometBFT RPC, IBC, and native Cosmos SDK transactions
+- Cosmos Chain ID (string): Used for interactions through the CometBFT RPC, IBC, and native Cosmos SDK transactions
   (e.g., "mychain-1").
-  - EVM Chain ID (integer): Used for EVM-specific transactions (e.g., via MetaMask) and ensures compatibility with
+- EVM Chain ID (integer): Used for EVM-specific transactions (e.g., via MetaMask) and ensures compatibility with
   EIP-155 tooling (e.g., 9000).
 
   :::note
-  Make sure your chosen EVM chain ID is not already in use by consulting the list at https://chainlist.org/.
+  Make sure your chosen EVM chain ID is not already in use by consulting the list at <https://chainlist.org/>.
   :::
 
   Files to Update:
 
-  - app/app.go: Set your Cosmos and EVM chain ID constants.
+- app/app.go: Set your Cosmos and EVM chain ID constants.
   const CosmosChainID = "mychain-1" // Standard Cosmos format
   const EVMChainID = 9000           // EIP-155 integer
-  - Makefile, scripts/*.sh, genesis.json: Ensure these files use the correct Cosmos and EVM chain IDs where appropriate.
+- Makefile, scripts/*.sh, genesis.json: Ensure these files use the correct Cosmos and EVM chain IDs where appropriate.
 
   Account Configuration
 
   Use eth_secp256k1 as the standard account type with coin type 60 for Ethereum compatibility.
 
-  - Key Algorithm: Defaults to eth_secp256k1.
-  - Coin Type (SLIP-0044): Change from 118 (Cosmos default) to 60 (Ethereum standard).
+- Key Algorithm: Defaults to eth_secp256k1.
+- Coin Type (SLIP-0044): Change from 118 (Cosmos default) to 60 (Ethereum standard).
 
   Files to Update:
 
-  - app/app.go: const CoinType uint32 = 60
-  - chain_registry.json: "slip44": 60
-  - chains/*.json: "coin_type": 60
+- app/app.go: const CoinType uint32 = 60
+- chain_registry.json: "slip44": 60
+- chains/*.json: "coin_type": 60
 
   Base Denomination and Power Reduction
 
@@ -145,9 +132,9 @@
 
   Benefits
 
-  - Lossless Precision: Prevents invisible asset loss from rounding inconsistencies.
-  - High DApp Compatibility: Ensures DeFi protocols that rely on precise accounting function correctly.
-  - Simple Integration: Requires modifying app.go to provide the x/vm keeper with the x/precisebank keeper instead of
+- Lossless Precision: Prevents invisible asset loss from rounding inconsistencies.
+- High DApp Compatibility: Ensures DeFi protocols that rely on precise accounting function correctly.
+- Simple Integration: Requires modifying app.go to provide the x/vm keeper with the x/precisebank keeper instead of
   the x/bank keeper.
 
   Integration in app.go
@@ -410,7 +397,7 @@
       evm "github.com/cosmos/evm/x/vm"
       evmkeeper "github.com/cosmos/evm/x/vm/keeper"
       evmtypes "github.com/cosmos/evm/x/vm/types"
-      _ "github.com/cosmos/evm/x/vm/core/tracers/js"
+      _"github.com/cosmos/evm/x/vm/core/tracers/js"
       _ "github.com/cosmos/evm/x/vm/core/tracers/native"
 
       // Replace default transfer with EVM's extended transfer module
@@ -445,7 +432,7 @@
       appOpts servertypes.AppOptions,
       evmAppOptions EVMOptionsFn, // <<< Add this parameter
       baseAppOptions ...func(*baseapp.BaseApp),
-  ) *ChainApp { // ...
+  )*ChainApp { // ...
   5. Replace SDK Encoding with evmencoding.MakeConfig():
 
   encodingConfig := evmencoding.MakeConfig()
@@ -717,9 +704,9 @@
       srvCfg, customAppTemplate := serverconfig.AppConfig(DefaultDenom)
       customAppConfig := CustomAppConfig{
           Config:  *srvCfg,
-          EVM:     *evmserverconfig.DefaultEVMConfig(),
+          EVM:*evmserverconfig.DefaultEVMConfig(),
           JSONRPC: *evmserverconfig.DefaultJSONRPCConfig(),
-          TLS:     *evmserverconfig.DefaultTLSConfig(),
+          TLS:*evmserverconfig.DefaultTLSConfig(),
       }
       customAppTemplate += evmserverconfig.DefaultEVMConfigTemplate
       return customAppTemplate, customAppConfig
@@ -806,7 +793,7 @@
   Option B: Enable Sign Mode Textual (If needed for your use case)
 
   If your chain requires Sign Mode Textual support, ensure your ante handler and configuration support it. The reference
-   implementation in evmd enables it by default.
+   implementation in `appd` enables it by default.
 
   Step 12: Testing Your Integration
 
@@ -814,29 +801,34 @@
 
   1. Build and Run Tests
 
-  # Run all unit tests
+# Run all unit tests
+
   make test-all
 
-  # Run EVM-specific tests
-  make test-evmd
+# Run EVM-specific tests
 
-  # Run integration tests
+  make test-appd
+
+# Run integration tests
+
   make test-integration
 
   2. Local Node Testing
 
   Use the provided local node script as a reference to set up your own:
-  # Copy and adapt the script from the Cosmos EVM repo
-  curl -O https://raw.githubusercontent.com/cosmos/evm/main/local_node.sh
+
+# Copy and adapt the script from the Cosmos EVM repo
+
+  curl -O <https://raw.githubusercontent.com/cosmos/evm/main/local_node.sh>
   chmod +x local_node.sh
   ./local_node.sh
 
   3. Verify EVM Functionality
 
-  - Check that the JSON-RPC server starts on the configured port (default: 8545)
-  - Verify that you can connect MetaMask to your local node
-  - Test that precompiles are accessible at their expected addresses
-  - Confirm IBC tokens are automatically registered as ERC20s
+- Check that the JSON-RPC server starts on the configured port (default: 8545)
+- Verify that you can connect MetaMask to your local node
+- Test that precompiles are accessible at their expected addresses
+- Confirm IBC tokens are automatically registered as ERC20s
 
   4. Genesis Validation
 
@@ -868,5 +860,4 @@
     - Cause: Missing authz keeper in precompile initialization
     - Solution: Ensure AuthzKeeper is initialized and passed to precompiles that require it
 
-  Remember to always check the https://github.com/cosmos/evm for the latest updates and examples.
-
+  Remember to always check the <https://github.com/cosmos/evm> for the latest updates and examples.
