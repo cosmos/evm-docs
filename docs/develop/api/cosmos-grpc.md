@@ -1,13 +1,12 @@
 ---
-sidebar_position: 3
+title: "gRPC"
 ---
 
 # Cosmos gRPC & REST
 
 ## Cosmos gRPC
 
-Cosmos EVM exposes gRPC endpoints for all the integrated Cosmos SDK modules. This makes it easier for
-wallets and block explorers to interact with the Proof-of-Stake logic and native Cosmos transactions and queries.
+Cosmos EVM exposes gRPC endpoints for all the integrated Cosmos SDK modules. gRPC is a significantly improved interface that provides automatic type generation and greatly reduced transmission overhead. [Read more..](https://grpc.io/docs/what-is-grpc/introduction/)
 
 ## Cosmos HTTP REST (gRPC-Gateway)
 

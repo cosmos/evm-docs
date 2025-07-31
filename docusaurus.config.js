@@ -56,7 +56,7 @@ const config = {
       name: "Cosmos EVM",
       denom: "stake",
       ticker: "STAKE",
-      binary: "evmd",
+      binary: "appd",
       testnet_denom: "tStake",
       testnet_ticker: "tSTAKE",
       rpc_url: "",
@@ -165,7 +165,7 @@ const config = {
           },
           {
             position: 'right',
-            label: 'Cosmos',
+            label: 'Network',
             to: 'https://cosmos.network/',
           },
           {
@@ -216,17 +216,17 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Blog',
-                to: 'https://blog.cosmos.network/',
+                label: 'GitHub',
+                href: 'https://github.com/cosmos/evm',
               },
               {
-                label: 'Cosmos GitHub',
-                href: 'https://github.com/Cosmos',
+                label: 'Contact',
+                href: 'https://share-eu1.hsforms.com/2g6yO-PVaRoKj50rUgG4Pjg2e2sca',
               },
             ],
           },
         ],
-        copyright: `Cosmos EVM is a fork of evmOS, maintained by Interchain Labs. © ${new Date().getFullYear()} All rights reserved.`,
+        copyright: `Cosmos EVM is a fork of evmOS, maintained by Interchain Labs.  ${new Date().getFullYear()} All rights reserved.`,
       },
       prism: {
         theme: lightCodeTheme,
@@ -234,7 +234,7 @@ const config = {
       },
       metadata: [
         {
-          name: "Cosmos EVM Docs", 
+          name: "Cosmos EVM Docs",
           content: "Official Cosmos EVM Docs, the native EVM implementation of Cosmos."
         },
         {
@@ -257,12 +257,12 @@ const config = {
       algolia: {
         // The application ID provided by Algolia
         appId: 'IEET1JIXIY',
-  
+
         // Public API key: it is safe to commit it
         apiKey: '9278938f3473a22479c18c8079e2e6b5',
-  
+
         indexName: 'cosmosevmdocs',
-  
+
         contextualSearch: true,
         searchParameters: {},
       },

@@ -37,7 +37,7 @@ and dynamically expands/contracts block sizes to deal with peaks of network cong
 
 Before EIP-1559 the transaction fee is calculated with
 
-```
+```sh
 fee = gasPrice * gasLimit
 ```
 
@@ -48,7 +48,7 @@ To submit a transaction, the signer needs to specify the `gasPrice`.
 
 With EIP-1559 enabled, the transaction fee is calculated with
 
-```
+```sh
 fee = (baseFee + priorityTip) * gasLimit
 ```
 
@@ -99,7 +99,7 @@ that a transaction is willing to provide.
 It is derived from the transaction arguments and the base fee parameter.
 Depending on which one is smaller, the effective gas price is either the `baseFee + tip` or the `gasFeeCap`
 
-```
+```golang
 min(baseFee + gasTipCap, gasFeeCap)
 ```
 
@@ -154,7 +154,7 @@ Only BlockGasUsed in previous block needs to be tracked in state for the next ba
 
 ## Begin block
 
-The base fee is calculated at the beginning of each block.
+**Note:** Base fee calculation has been moved to `EndBlock` to comply with EIP-1559 specifications. The logic described here now executes at the end of each block.
 
 ### Base Fee
 
@@ -217,7 +217,7 @@ The `block_gas_used` value is updated at the end of each block.
 
 The total gas used by current block is stored in the KVStore at `EndBlock`.
 
-It is initialized to `block_gas` defined in the genesis.
+It is initialized to `block_gas`, defined in the genesis.
 
 ## Keeper
 
@@ -257,7 +257,6 @@ The `x/feemarket` module contains the following parameters:
 | NoBaseFee                | bool    | false          | control the base fee adjustment                                                                                         |
 | BaseFeeChangeDenominator | uint32  | 8              | bounds the amount the base fee that can change between blocks                                                           |
 | ElasticityMultiplier     | uint32  | 2              | bounds the threshold which the base fee will increase or decrease depending on the total gas used in the previous block |
-| BaseFee                  | uint32  | 1000000000     | base fee for EIP-1559 blocks                                                                                            |
 | EnableHeight             | uint32  | 0              | height which enable fee adjustment                                                                                      |
 | MinGasPrice              | sdk.Dec | 0              | global minimum gas price that needs to be paid to include a transaction in a block                                      |
 
@@ -272,7 +271,7 @@ A user can query and interact with the `feemarket` module using the CLI.
 The `query` commands allow users to query `feemarket` state.
 
 ```bash
-evmd query feemarket --help
+appd query feemarket --help
 ```
 
 ##### Base Fee
@@ -280,18 +279,18 @@ evmd query feemarket --help
 The `base-fee` command allows users to query the block base fee by height.
 
 ```bash
-evmd query feemarket base-fee [flags]
+appd query feemarket base-fee [flags]
 ```
 
 Example:
 
 ```bash
-evmd query feemarket base-fee ...
+appd query feemarket base-fee ...
 ```
 
 Example Output:
 
-```
+```sh
 base_fee: "512908936"
 ```
 
@@ -300,18 +299,18 @@ base_fee: "512908936"
 The `block-gas` command allows users to query the block gas by height.
 
 ```bash
-evmd query feemarket block-gas [flags]
+appd query feemarket block-gas [flags]
 ```
 
 Example:
 
 ```bash
-evmd query feemarket block-gas ...
+appd query feemarket block-gas ...
 ```
 
 Example Output:
 
-```
+```sh
 gas: "21000"
 ```
 
@@ -320,18 +319,18 @@ gas: "21000"
 The `params` command allows users to query the module params.
 
 ```bash
-evmd query params subspace [subspace] [key] [flags]
+appd query params subspace [subspace] [key] [flags]
 ```
 
 Example:
 
 ```bash
-evmd query params subspace feemarket ElasticityMultiplier ...
+appd query params subspace feemarket ElasticityMultiplier ...
 ```
 
 Example Output:
 
-```
+```sh
 key: ElasticityMultiplier
 subspace: feemarket
 value: "2"
@@ -386,7 +385,7 @@ are rejected by the `feemarket` `AnteHandle`.
 Calculates the effective fees to deduct and the tx priority according to EIP-1559 spec,
 then deducts the fees and sets the tx priority in the response.
 
-```
+```sh
 effectivePrice = min(baseFee + tipFeeCap, gasFeeCap)
 effectiveTipFee = effectivePrice - baseFee
 priority = effectiveTipFee / DefaultPriorityReduction

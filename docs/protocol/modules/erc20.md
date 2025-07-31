@@ -110,8 +110,8 @@ During the Registration of an ERC20 Token the Coin metadata is derived from the 
 
 - **Description**: `Cosmos coin token representation of {contractAddress}`
 - **DenomUnits**:
-    - Coin: `0`
-    - ERC20: `{uint32(erc20Data.Decimals)}`
+  - Coin: `0`
+  - ERC20: `{uint32(erc20Data.Decimals)}`
 - **Base**: `{"erc20/%s", address}`
 - **Display**: `{erc20Data.Name}`
 - **Name**: `{types.CreateDenom(strContract)}`
@@ -177,14 +177,14 @@ One-to-one mapping of native Cosmos coin denomination to ERC20 token contract ad
 
 ```go
 type TokenPair struct {
-	// address of ERC20 contract token
-	Erc20Address string `protobuf:"bytes,1,opt,name=erc20_address,json=erc20Address,proto3" json:"erc20_address,omitempty"`
-	// cosmos base denomination to be mapped to
-	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	// shows token mapping enable status
-	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
-	// ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external address
-	ContractOwner Owner `protobuf:"varint,4,opt,name=contract_owner,json=contractOwner,proto3,enum=cosmos.evm.erc20.v1.Owner" json:"contract_owner,omitempty"`
+ // address of ERC20 contract token
+ Erc20Address string `protobuf:"bytes,1,opt,name=erc20_address,json=erc20Address,proto3" json:"erc20_address,omitempty"`
+ // cosmos base denomination to be mapped to
+ Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+ // shows token mapping enable status
+ Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+ // ERC20 owner address ENUM (0 invalid, 1 ModuleAccount, 2 external address
+ ContractOwner Owner `protobuf:"varint,4,opt,name=contract_owner,json=contractOwner,proto3,enum=cosmos.evm.erc20.v1.Owner" json:"contract_owner,omitempty"`
 }
 ```
 
@@ -209,12 +209,12 @@ The `Owner` enumerates the ownership of a ERC20 contract.
 type Owner int32
 
 const (
-	// OWNER_UNSPECIFIED defines an invalid/undefined owner.
-	OWNER_UNSPECIFIED Owner = 0
-	// OWNER_MODULE erc20 is owned by the erc20 module account.
-	OWNER_MODULE Owner = 1
-	// EXTERNAL erc20 is owned by an external account.
-	OWNER_EXTERNAL Owner = 2
+ // OWNER_UNSPECIFIED defines an invalid/undefined owner.
+ OWNER_UNSPECIFIED Owner = 0
+ // OWNER_MODULE erc20 is owned by the erc20 module account.
+ OWNER_MODULE Owner = 1
+ // EXTERNAL erc20 is owned by an external account.
+ OWNER_EXTERNAL Owner = 2
 )
 ```
 
@@ -224,13 +224,13 @@ The `Owner` can be checked with the following helper functions:
 // IsNativeCoin returns true if the owner of the ERC20 contract is the
 // erc20 module account
 func (tp TokenPair) IsNativeCoin() bool {
-	return tp.ContractOwner == OWNER_MODULE
+ return tp.ContractOwner == OWNER_MODULE
 }
 
 // IsNativeERC20 returns true if the owner of the ERC20 contract not the
 // erc20 module account
 func (tp TokenPair) IsNativeERC20() bool {
-	return tp.ContractOwner == OWNER_EXTERNAL
+ return tp.ContractOwner == OWNER_EXTERNAL
 }
 ```
 
@@ -247,10 +247,10 @@ It contains the module parameters and the registered token pairs :
 ```go
 // GenesisState defines the module's genesis state.
 type GenesisState struct {
-	// module parameters
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// registered token pairs
-	TokenPairs []TokenPair `protobuf:"bytes,2,rep,name=token_pairs,json=tokenPairs,proto3" json:"token_pairs"`
+ // module parameters
+ Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+ // registered token pairs
+ TokenPairs []TokenPair `protobuf:"bytes,2,rep,name=token_pairs,json=tokenPairs,proto3" json:"token_pairs"`
 }
 ```
 
@@ -305,7 +305,7 @@ Conversion of a registered `TokenPair` can be done via:
 #### 1. Registered Coin
 
 :::tip
-👉 **Context:** A `TokenPair` has been created through a `RegisterCoinProposal` governance proposal.
+ **Context:** A `TokenPair` has been created through a `RegisterCoinProposal` governance proposal.
 The proposal created an `ERC20` contract
 ([ERC20Mintable by openzeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/contracts/token/ERC20))
 of the ERC20 token representation of the Coin from the `ModuleAccount`,
@@ -323,8 +323,8 @@ and thus granting it the permission to call the `mint()` and `burnFrom()` method
 - There shouldn't exist any native Cosmos Coin ERC20 Contract (eg Evmos, Atom,
   Osmo ERC20 contracts) that is not owned by the governance
 - Token/Coin supply is maintained at all times:
-    - Total Coin supply = Coins + Escrowed Coins
-    - Total Token supply = Escrowed Coins = Minted Tokens
+  - Total Coin supply = Coins + Escrowed Coins
+  - Total Token supply = Escrowed Coins = Minted Tokens
 
 ##### 1.1 Coin to ERC20
 
@@ -354,7 +354,7 @@ and thus granting it the permission to call the `mint()` and `burnFrom()` method
 #### 2. Registered ERC20
 
 :::tip
-👉 **Context:** A `TokenPair` has been created through a `RegisterERC20Proposal` governance proposal.
+ **Context:** A `TokenPair` has been created through a `RegisterERC20Proposal` governance proposal.
 The `ModuleAccount` is not the owner of the contract, so it can't mint new tokens or burn on behalf of the user.
 The mechanism described below follows the same model as the ICS20 standard,
 by using escrow & mint / burn & unescrow logic.
@@ -363,12 +363,12 @@ by using escrow & mint / burn & unescrow logic.
 ##### Invariants
 
 - ERC20 Token supply on the EVM runtime is maintained at all times:
-    - Escrowed ERC20 + Minted Cosmos Coin representation of ERC20 = Burned Cosmos Coin representation of ERC20 +
+  - Escrowed ERC20 + Minted Cosmos Coin representation of ERC20 = Burned Cosmos Coin representation of ERC20 +
       Unescrowed ERC20
-        - Convert 10 ERC20 → Coin, the total supply increases by 10. Mint on Cosmos side, no changes on EVM
-        - Convert 10 Coin → ERC20, the total supply decreases by 10. Burn on Cosmos side , no changes of supply on EVM
-    - Total ERC20 token supply = Non Escrowed Tokens + Escrowed Tokens (on Module account address)
-    - Total Coin supply for the native ERC20 = Escrowed ERC20 Tokens on module account  (i.e balance) = Minted Coins
+    - Convert 10 ERC20 → Coin, the total supply increases by 10. Mint on Cosmos side, no changes on EVM
+    - Convert 10 Coin → ERC20, the total supply decreases by 10. Burn on Cosmos side , no changes of supply on EVM
+  - Total ERC20 token supply = Non Escrowed Tokens + Escrowed Tokens (on Module account address)
+  - Total Coin supply for the native ERC20 = Escrowed ERC20 Tokens on module account  (i.e balance) = Minted Coins
 
 ##### 2.1 ERC20 to Coin
 
@@ -405,12 +405,12 @@ and it automatically executes the custom handler for `RegisterCoinProposal` when
 
 ```go
 type RegisterCoinProposal struct {
-	// title of the proposal
-	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	// proposal description
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// metadata slice of the native Cosmos coins
-	Metadata []types.Metadata `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata"`
+ // title of the proposal
+ Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+ // proposal description
+ Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+ // metadata slice of the native Cosmos coins
+ Metadata []types.Metadata `protobuf:"bytes,3,rep,name=metadata,proto3" json:"metadata"`
 }
 ```
 
@@ -419,12 +419,12 @@ The proposal content stateless validation fails if:
 - Title is invalid (length or char)
 - Description is invalid (length or char)
 - Metadata is invalid
-    - Name and Symbol are not blank
-    - Base and Display denominations are valid coin denominations
-    - Base and Display denominations are present in the DenomUnit slice
-    - Base denomination has exponent 0
-    - Denomination units are sorted in ascending order
-    - Denomination units not duplicated
+  - Name and Symbol are not blank
+  - Base and Display denominations are valid coin denominations
+  - Base and Display denominations are present in the DenomUnit slice
+  - Base denomination has exponent 0
+  - Denomination units are sorted in ascending order
+  - Denomination units not duplicated
 
 ### `RegisterERC20Proposal`
 
@@ -434,12 +434,12 @@ and it automatically executes the custom handler for `RegisterERC20Proposal` whe
 
 ```go
 type RegisterERC20Proposal struct {
-	// title of the proposal
-	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	// proposal description
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// contract addresses of ERC20 tokens
-	Erc20Addresses []string `protobuf:"bytes,3,rep,name=erc20addresses,proto3" json:"erc20addresses,omitempty"`
+ // title of the proposal
+ Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+ // proposal description
+ Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+ // contract addresses of ERC20 tokens
+ Erc20Addresses []string `protobuf:"bytes,3,rep,name=erc20addresses,proto3" json:"erc20addresses,omitempty"`
 }
 ```
 
@@ -455,13 +455,13 @@ A user broadcasts a `MsgConvertCoin` message to convert a Cosmos Coin to a ERC20
 
 ```go
 type MsgConvertCoin struct {
-	// Cosmos coin which denomination is registered on erc20 bridge.
-	// The coin amount defines the total ERC20 tokens to convert.
-	Coin types.Coin `protobuf:"bytes,1,opt,name=coin,proto3" json:"coin"`
-	// recipient hex address to receive ERC20 token
-	Receiver string `protobuf:"bytes,2,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	// cosmos bech32 address from the owner of the given ERC20 tokens
-	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+ // Cosmos coin which denomination is registered on erc20 bridge.
+ // The coin amount defines the total ERC20 tokens to convert.
+ Coin types.Coin `protobuf:"bytes,1,opt,name=coin,proto3" json:"coin"`
+ // recipient hex address to receive ERC20 token
+ Receiver string `protobuf:"bytes,2,opt,name=receiver,proto3" json:"receiver,omitempty"`
+ // cosmos bech32 address from the owner of the given ERC20 tokens
+ Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
 }
 ```
 
@@ -477,14 +477,14 @@ A user broadcasts a `MsgConvertERC20` message to convert a ERC20 token to a nati
 
 ```go
 type MsgConvertERC20 struct {
-	// ERC20 token contract address registered on erc20 bridge
-	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// amount of ERC20 tokens to mint
-	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
-	// bech32 address to receive SDK coins.
-	Receiver string `protobuf:"bytes,3,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	// sender hex address from the owner of the given ERC20 tokens
-	Sender string `protobuf:"bytes,4,opt,name=sender,proto3" json:"sender,omitempty"`
+ // ERC20 token contract address registered on erc20 bridge
+ ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+ // amount of ERC20 tokens to mint
+ Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
+ // bech32 address to receive SDK coins.
+ Receiver string `protobuf:"bytes,3,opt,name=receiver,proto3" json:"receiver,omitempty"`
+ // sender hex address from the owner of the given ERC20 tokens
+ Sender string `protobuf:"bytes,4,opt,name=sender,proto3" json:"sender,omitempty"`
 }
 ```
 
@@ -501,13 +501,13 @@ A gov Content type to toggle the internal conversion of a token pair.
 
 ```go
 type ToggleTokenConversionProposal struct {
-	// title of the proposal
-	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	// proposal description
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// token identifier can be either the hex contract address of the ERC20 or the
-	// Cosmos base denomination
-	Token string `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
+ // title of the proposal
+ Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+ // proposal description
+ Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+ // token identifier can be either the hex contract address of the ERC20 or the
+ // Cosmos base denomination
+ Token string `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 }
 ```
 
@@ -615,12 +615,12 @@ to a Cosmos Coin by transferring the Tokens through a `MsgEthereumTx`  to the `M
 
 ### CLI
 
-Find below a list of  `evmd` commands added with the  `x/erc20` module.
-You can obtain the full list by using the `evmd -h` command.
+Find below a list of  `appd` commands added with the  `x/erc20` module.
+You can obtain the full list by using the `appd -h` command.
 A CLI command can look like this:
 
 ```bash
-evmd query erc20 params
+appd query erc20 params
 ```
 
 #### Queries
@@ -649,7 +649,7 @@ Submit a proposal to register a Cosmos coin to the erc20 along with an initial d
 Upon passing, the proposal details must be supplied via a JSON file.
 
 ```bash
-evmd tx gov submit-legacy-proposal register-coin METADATA_FILE [flags]
+appd tx gov submit-legacy-proposal register-coin METADATA_FILE [flags]
 ```
 
 Where METADATA_FILE contains (example):
@@ -658,24 +658,24 @@ Where METADATA_FILE contains (example):
 {
   "metadata": [
     {
-			"description": "The native staking and governance token of the Osmosis chain",
-			"denom_units": [
-				{
-						"denom": "ibc/<HASH>",
-						"exponent": 0,
-						"aliases": ["ibcuosmo"]
-				},
-				{
-						"denom": "OSMO",
-						"exponent": 6
-				}
-			],
-			"base": "ibc/<HASH>",
-			"display": "OSMO",
-			"name": "Osmo",
-			"symbol": "OSMO"
-		}
-	]
+   "description": "The native staking and governance token of the Osmosis chain",
+   "denom_units": [
+    {
+      "denom": "ibc/<HASH>",
+      "exponent": 0,
+      "aliases": ["ibcuosmo"]
+    },
+    {
+      "denom": "OSMO",
+      "exponent": 6
+    }
+   ],
+   "base": "ibc/<HASH>",
+   "display": "OSMO",
+   "name": "Osmo",
+   "symbol": "OSMO"
+  }
+ ]
 }
 ```
 
@@ -687,7 +687,7 @@ To register multiple tokens in one proposal pass them after each other e.g.
 `register-erc20 <contract-address1> <contract-address2>`.
 
 ```bash
-evmd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
+appd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
 ```
 
 **`toggle-token-conversion`**
@@ -695,7 +695,7 @@ evmd tx gov submit-legacy-proposal register-erc20 ERC20_ADDRESS... [flags]
 Allows users to submit a `ToggleTokenConversionProposal`.
 
 ```bash
-evmd tx gov submit-legacy-proposal toggle-token-conversion TOKEN [flags]
+appd tx gov submit-legacy-proposal toggle-token-conversion TOKEN [flags]
 ```
 
 **Update Params**
@@ -706,7 +706,7 @@ To do this, you will have to provide a JSON file with the correspondiong message
 For more information on how to draft a proposal, refer to the [Drafting a proposal section](../evmos-cli/proposal-draft.md).
 
 ```bash
-evmd tx gov submit-proposal proposal.json [flags]
+appd tx gov submit-proposal proposal.json [flags]
 ```
 
 ### gRPC
