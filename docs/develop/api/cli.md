@@ -65,9 +65,18 @@ appd start [flags]
 Key flags:
 
 - `--json-rpc.enable`: Enable the JSON-RPC server
-- `--json-rpc.address`: JSON-RPC server address (default: `0.0.0.0:8545`)
-- `--json-rpc.ws-address`: JSON-RPC WebSocket server address (default: `0.0.0.0:8546`)
-- `--json-rpc.api`: API namespaces to enable (e.g., `eth,web3,net,txpool,debug`)
+- `--json-rpc.address`: JSON-RPC server address (default: `127.0.0.1:8545`)
+- `--json-rpc.ws-address`: JSON-RPC WebSocket server address (default: `127.0.0.1:8546`)
+- `--json-rpc.api`: API namespaces to enable (default: `eth,net,web3`)
+- `--json-rpc.enable-indexer`: Enable the custom tx indexer for json-rpc
+- `--json-rpc.enable-profiling`: Enable profiling in the debug namespace
+- `--json-rpc.filter-cap`: Sets the global cap for total number of filters (default: `200`)
+- `--json-rpc.gas-cap`: Sets a cap on gas that can be used in eth_call/estimateGas (default: `25000000`)
+- `--json-rpc.txfee-cap`: Sets a cap on transaction fee that can be sent via RPC APIs (default: `1`)
+- `--json-rpc.batch-request-limit`: Maximum number of requests in a batch (default: `1000`)
+- `--json-rpc.evm-timeout`: Sets a timeout used for eth_call (default: `5s`)
+- `--json-rpc.logs-cap`: Sets the max number of results from eth_getLogs query (default: `10000`)
+- `--json-rpc.block-range-cap`: Sets the max block range allowed for eth_getLogs query (default: `10000`)
 
 :::warning
 You should only expose the debug endpoint in non production settings as it could impact network performance and uptime under certain conditions.
@@ -88,6 +97,17 @@ Query remote node for status.
 ```bash
 appd status [flags]
 ```
+
+#### `index-eth-tx`
+
+Index historical Ethereum transactions.
+
+```bash
+appd index-eth-tx [backward|forward] [flags]
+```
+
+- `backward`: Index from first indexed block to earliest block
+- `forward`: Index from latest indexed block to latest block
 
 ### Key Management
 
@@ -113,6 +133,14 @@ List all keys in the keyring.
 
 ```bash
 appd keys list [flags]
+```
+
+#### `keys list-key-types`
+
+List all supported key types.
+
+```bash
+appd keys list-key-types [flags]
 ```
 
 #### `keys show`
@@ -171,12 +199,20 @@ Get account information for an address.
 appd query evm account [address] [flags]
 ```
 
+##### `query evm balance-bank`
+
+Get bank balance for a 0x address.
+
+```bash
+appd query evm balance-bank [0x-address] [denom] [flags]
+```
+
 ##### `query evm balance-erc20`
 
 Get ERC20 token balance.
 
 ```bash
-appd query evm balance-erc20 [address] [erc20-address] [flags]
+appd query evm balance-erc20 [0x-address] [erc20-address] [flags]
 ```
 
 ##### `query evm code`
@@ -193,6 +229,14 @@ Get storage value at a specific key.
 
 ```bash
 appd query evm storage [address] [key] [flags]
+```
+
+##### `query evm config`
+
+Get EVM configuration values.
+
+```bash
+appd query evm config [flags]
 ```
 
 ##### `query evm params`
@@ -265,6 +309,24 @@ Get fee market parameters.
 
 ```bash
 appd query feemarket params [flags]
+```
+
+#### Precisebank Module Queries
+
+##### `query precisebank remainder`
+
+Get the remainder amount in the precise bank module.
+
+```bash
+appd query precisebank remainder [flags]
+```
+
+##### `query precisebank fractional-balance`
+
+Get the fractional balance of an account.
+
+```bash
+appd query precisebank fractional-balance [address] [flags]
 ```
 
 #### Standard Cosmos Queries
@@ -356,6 +418,22 @@ Convert ERC20 tokens to native Cosmos coins.
 
 ```bash
 appd tx erc20 convert-erc20 [contract-address] [amount] [receiver] [flags]
+```
+
+##### `tx erc20 register-erc20`
+
+Register native ERC20 tokens (governance only).
+
+```bash
+appd tx erc20 register-erc20 [contract-address...] [flags]
+```
+
+##### `tx erc20 toggle-conversion`
+
+Enable or disable token pair conversion (governance only).
+
+```bash
+appd tx erc20 toggle-conversion [token] [flags]
 ```
 
 #### Standard Cosmos Transactions
@@ -484,7 +562,7 @@ appd query feemarket base-fee
 
 ```bash
 # Send native tokens
-appd tx bank send myaccount 1... 100ustake --gas-prices 10ustake
+appd tx bank send myaccount cosmos1... 100ustake --gas-prices 10ustake
 
 # Send via EVM
 appd tx evm send myaccount 0x... 100ustake --gas-prices 10ustake

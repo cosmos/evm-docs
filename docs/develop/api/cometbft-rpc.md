@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+title: "RPC"
 ---
 
 # CometBFT RPC
@@ -19,7 +19,7 @@ curl localhost:26657/block?height=5
 ## RPC/HTTP
 
 JSONRPC requests can be POST'd to the root RPC endpoint via HTTP. See the list
-of supported CometBFT RPC endpoints using Swagger [here](../api#clients).
+of supported CometBFT RPC endpoints using Swagger in the [API/clients](../api#clients) section.
 
 ## RPC/Websocket
 
@@ -42,8 +42,9 @@ CometBFT provides a WebSocket connection that allows you to subscribe to and uns
 
 ### Prerequisites
 
-  * **CometBFT Node**: You need a running CometBFT node with its RPC WebSocket enabled.
-  * **`ws` tool**: A command-line WebSocket client. If you don't have it, you can install it via npm:
+- **CometBFT Node**: You need a running CometBFT node with its RPC WebSocket enabled.
+- **`ws` tool**: A command-line WebSocket client. If you don't have it, you can install it via npm:
+
     ```bash
     npm i -g ws
     ```
@@ -62,16 +63,16 @@ appd start --rpc.laddr="tcp://127.0.0.1:26657"
 
 ### Subscribing to Events
 
-1.  **Connect to the CometBFT WebSocket**:
+1. **Connect to the CometBFT WebSocket**:
     Use the `ws` command to establish a connection to your node's WebSocket endpoint.
 
     ```bash
     ws ws://localhost:26657/websocket
     ```
 
-    Once connected, you'll see your prompt ready to accept input (e.g., ` >  `).
+    Once connected, you'll see your prompt ready to accept input (e.g., ` > `).
 
-2.  **Send a Subscription Request**:
+2. **Send a Subscription Request**:
     To subscribe to a specific event, send a JSON-RPC request with the `"method": "subscribe"` and a `"query"` parameter. The `query` uses a specific syntax to filter events.
 
     For example, to subscribe to `NewBlockHeader` events (which fire when a new block header is committed):
@@ -174,19 +175,19 @@ For a comprehensive list of event types and values for each Cosmos SDK module, r
 
 Let's illustrate with an example to subscribe to `ValidatorSetUpdates`. This event is triggered when there are changes to the validator set for a block.
 
-1.  **Connect to the WebSocket**:
+1. **Connect to the WebSocket**:
 
     ```bash
     ws ws://localhost:26657/websocket
     ```
 
-2.  **Send the Subscription Request**:
+2. **Send the Subscription Request**:
 
     ```json
     > { "jsonrpc": "2.0", "method": "subscribe", "params": ["tm.event='ValidatorSetUpdates'"], "id": 1 }
     ```
 
-3.  **Example Response (truncated for brevity)**:
+3. **Example Response (truncated for brevity)**:
     When a validator set update occurs, you'll receive a JSON response similar to this:
 
     ```json
